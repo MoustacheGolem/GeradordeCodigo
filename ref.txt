@@ -1,1 +1,4 @@
 var a : inteiro; {escreva(1);}  programa germana
+
+
+int a; {escreva(1);}

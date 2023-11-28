@@ -39,11 +39,12 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     VAR = 258,
-     INTEIRO = 259,
-     ESCREVA = 260,
-     NUM = 261,
-     ID = 262
+     INT = 258,
+     VAR = 259,
+     INTEIRO = 260,
+     ESCREVA = 261,
+     NUM = 262,
+     ID = 263
    };
 #endif
 
@@ -62,7 +63,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 66 "sintatico.tab.h"
+#line 67 "sintatico.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

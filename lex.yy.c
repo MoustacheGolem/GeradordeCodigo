@@ -423,8 +423,8 @@ static void yynoreturn yy_fatal_error ( const char* msg  );
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-#define YY_NUM_RULES 8
-#define YY_END_OF_BUFFER 9
+#define YY_NUM_RULES 9
+#define YY_END_OF_BUFFER 10
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -434,9 +434,9 @@ struct yy_trans_info
 	};
 static const flex_int16_t yy_accept[30] =
     {   0,
-        0,    0,    9,    7,    6,    6,    4,    5,    5,    5,
-        5,    6,    4,    5,    5,    5,    5,    5,    5,    1,
-        5,    5,    5,    5,    5,    5,    3,    2,    0
+        0,    0,   10,    8,    7,    7,    5,    6,    6,    6,
+        6,    7,    5,    6,    6,    6,    6,    6,    1,    2,
+        6,    6,    6,    6,    6,    6,    4,    3,    0
     } ;
 
 static const YY_CHAR yy_ec[256] =
@@ -749,7 +749,9 @@ YY_DECL
 	{
 #line 5 "lexico.l"
 
-#line 752 "lex.yy.c"
+
+
+#line 754 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -808,46 +810,51 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 6 "lexico.l"
-{return VAR;}
+#line 8 "lexico.l"
+{return INT;}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 7 "lexico.l"
-{return INTEIRO;}
+#line 9 "lexico.l"
+{return VAR;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 8 "lexico.l"
-{return ESCREVA;}
+#line 10 "lexico.l"
+{return INTEIRO;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 9 "lexico.l"
-{yylval.inteiro = atoi(yytext); return NUM;}
+#line 11 "lexico.l"
+{return ESCREVA;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 10 "lexico.l"
-{yylval.cadeia= (char *) strdup(yytext); return ID;}
+#line 12 "lexico.l"
+{yylval.inteiro = atoi(yytext); return NUM;}
 	YY_BREAK
 case 6:
-/* rule 6 can match eol */
 YY_RULE_SETUP
-#line 11 "lexico.l"
-{;}
+#line 13 "lexico.l"
+{yylval.cadeia= (char *) strdup(yytext); return ID;}
 	YY_BREAK
 case 7:
+/* rule 7 can match eol */
 YY_RULE_SETUP
-#line 12 "lexico.l"
-{return yytext[0];}
+#line 14 "lexico.l"
+{;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 13 "lexico.l"
+#line 15 "lexico.l"
+{return yytext[0];}
+	YY_BREAK
+case 9:
+YY_RULE_SETUP
+#line 16 "lexico.l"
 ECHO;
 	YY_BREAK
-#line 850 "lex.yy.c"
+#line 857 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1848,7 +1855,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 13 "lexico.l"
+#line 16 "lexico.l"
 
 int yywrap() {
   return 1;

@@ -48,9 +48,12 @@ static int highEmitLoc = 0;
 	int inteiro;
 	char *cadeia;
 }
+%token INT
 %token VAR INTEIRO ESCREVA
 %token <inteiro> NUM
 %token <cadeia> ID
+
+
 %%
 programa:	declaracoes '{' lista_cmds '}'
 	{
@@ -63,21 +66,33 @@ programa:	declaracoes '{' lista_cmds '}'
 
 	}
 ;
-declaracoes: VAR linhas_decl		{;}
+
+type: INT {;}
 ;
-linhas_decl: linha_decl			{;}
-		| linha_decl linhas_decl	{;}
+
+declaracoes: linha_decl			{;}
+		| linha_decl declaracoes	{;}
 ;
-linha_decl: lista_id ':' INTEIRO ';'		{;}
+
+linha_decl: type lista_id ';'		{;}
 ;
+
 lista_id: ID
-	{
-		printf("declarando id\n");
+	{	
+		if(constaTabSimb($1)){
+			// printf("variavel já declarada\n");
+			erroSemantico = 2;//erro variavel já declarada
+		}
+		// printf("declarando id\n");
 		colocaSimb($1,"tipo_int","variavel","nao",proxLocMemVar++);
 	}
 	| ID ',' lista_id
 	{
-		printf("declarando id\n");
+		if(constaTabSimb($1)){
+			// printf("variavel já declarada\n");
+			erroSemantico = 2;//erro variavel já declarada
+		}
+		// printf("declarando id\n");
 		colocaSimb($1,"tipo_int","variavel","nao",proxLocMemVar++);
 	}
 ;
@@ -177,8 +192,7 @@ int recuperaLocMemId(char *nomeSimb) {
 }
 // FIM GERA CODIGO
 
-int main(argc, argv)int argc;
-char **argv;
+int main(argc, argv) int argc; char **argv;
 	{
 //	extern int yydebug;
 //	yydebug=1;

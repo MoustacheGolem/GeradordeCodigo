@@ -1,15 +1,21 @@
+Terminals unused in grammar
+
+   VAR
+   INTEIRO
+
+
 Grammar
 
     0 $accept: programa $end
 
     1 programa: declaracoes '{' lista_cmds '}'
 
-    2 declaracoes: VAR linhas_decl
+    2 type: INT
 
-    3 linhas_decl: linha_decl
-    4            | linha_decl linhas_decl
+    3 declaracoes: linha_decl
+    4            | linha_decl declaracoes
 
-    5 linha_decl: lista_id ':' INTEIRO ';'
+    5 linha_decl: type lista_id ';'
 
     6 lista_id: ID
     7         | ID ',' lista_id
@@ -34,17 +40,17 @@ $end (0) 0
 '(' (40) 12
 ')' (41) 12
 ',' (44) 7
-':' (58) 5
 ';' (59) 5 8 9
 '=' (61) 13
 '{' (123) 1
 '}' (125) 1
 error (256)
-VAR (258) 2
-INTEIRO (259) 5
-ESCREVA (260) 12
-NUM (261) 14
-ID (262) 6 7 13 15
+INT (258) 2
+VAR (259)
+INTEIRO (260)
+ESCREVA (261) 12
+NUM (262) 14
+ID (263) 6 7 13 15
 
 
 Nonterminals, with rules where they appear
@@ -53,10 +59,10 @@ $accept (16)
     on left: 0
 programa (17)
     on left: 1, on right: 0
-declaracoes (18)
-    on left: 2, on right: 1
-linhas_decl (19)
-    on left: 3 4, on right: 2 4
+type (18)
+    on left: 2, on right: 5
+declaracoes (19)
+    on left: 3 4, on right: 1 4
 linha_decl (20)
     on left: 5, on right: 3 4
 lista_id (21)
@@ -77,80 +83,80 @@ state 0
 
     0 $accept: . programa $end
 
-    VAR  shift, and go to state 1
+    INT  shift, and go to state 1
 
     programa     go to state 2
-    declaracoes  go to state 3
+    type         go to state 3
+    declaracoes  go to state 4
+    linha_decl   go to state 5
 
 
 state 1
 
-    2 declaracoes: VAR . linhas_decl
+    2 type: INT .
 
-    ID  shift, and go to state 4
-
-    linhas_decl  go to state 5
-    linha_decl   go to state 6
-    lista_id     go to state 7
+    $default  reduce using rule 2 (type)
 
 
 state 2
 
     0 $accept: programa . $end
 
-    $end  shift, and go to state 8
+    $end  shift, and go to state 6
 
 
 state 3
+
+    5 linha_decl: type . lista_id ';'
+
+    ID  shift, and go to state 7
+
+    lista_id  go to state 8
+
+
+state 4
 
     1 programa: declaracoes . '{' lista_cmds '}'
 
     '{'  shift, and go to state 9
 
 
-state 4
-
-    6 lista_id: ID .
-    7         | ID . ',' lista_id
-
-    ','  shift, and go to state 10
-
-    $default  reduce using rule 6 (lista_id)
-
-
 state 5
 
-    2 declaracoes: VAR linhas_decl .
+    3 declaracoes: linha_decl .
+    4            | linha_decl . declaracoes
 
-    $default  reduce using rule 2 (declaracoes)
+    INT  shift, and go to state 1
+
+    $default  reduce using rule 3 (declaracoes)
+
+    type         go to state 3
+    declaracoes  go to state 10
+    linha_decl   go to state 5
 
 
 state 6
 
-    3 linhas_decl: linha_decl .
-    4            | linha_decl . linhas_decl
+    0 $accept: programa $end .
 
-    ID  shift, and go to state 4
-
-    $default  reduce using rule 3 (linhas_decl)
-
-    linhas_decl  go to state 11
-    linha_decl   go to state 6
-    lista_id     go to state 7
+    $default  accept
 
 
 state 7
 
-    5 linha_decl: lista_id . ':' INTEIRO ';'
+    6 lista_id: ID .
+    7         | ID . ',' lista_id
 
-    ':'  shift, and go to state 12
+    ','  shift, and go to state 11
+
+    $default  reduce using rule 6 (lista_id)
 
 
 state 8
 
-    0 $accept: programa $end .
+    5 linha_decl: type lista_id . ';'
 
-    $default  accept
+    ';'  shift, and go to state 12
 
 
 state 9
@@ -168,46 +174,46 @@ state 9
 
 state 10
 
-    7 lista_id: ID ',' . lista_id
+    4 declaracoes: linha_decl declaracoes .
 
-    ID  shift, and go to state 4
-
-    lista_id  go to state 19
+    $default  reduce using rule 4 (declaracoes)
 
 
 state 11
 
-    4 linhas_decl: linha_decl linhas_decl .
+    7 lista_id: ID ',' . lista_id
 
-    $default  reduce using rule 4 (linhas_decl)
+    ID  shift, and go to state 7
+
+    lista_id  go to state 19
 
 
 state 12
 
-    5 linha_decl: lista_id ':' . INTEIRO ';'
+    5 linha_decl: type lista_id ';' .
 
-    INTEIRO  shift, and go to state 20
+    $default  reduce using rule 5 (linha_decl)
 
 
 state 13
 
    12 cmd_saida: ESCREVA . '(' exp ')'
 
-    '('  shift, and go to state 21
+    '('  shift, and go to state 20
 
 
 state 14
 
    13 cmd_atribuicao: ID . '=' exp
 
-    '='  shift, and go to state 22
+    '='  shift, and go to state 21
 
 
 state 15
 
     1 programa: declaracoes '{' lista_cmds . '}'
 
-    '}'  shift, and go to state 23
+    '}'  shift, and go to state 22
 
 
 state 16
@@ -215,7 +221,7 @@ state 16
     8 lista_cmds: cmd . ';'
     9           | cmd . ';' lista_cmds
 
-    ';'  shift, and go to state 24
+    ';'  shift, and go to state 23
 
 
 state 17
@@ -241,39 +247,32 @@ state 19
 
 state 20
 
-    5 linha_decl: lista_id ':' INTEIRO . ';'
+   12 cmd_saida: ESCREVA '(' . exp ')'
 
-    ';'  shift, and go to state 25
+    NUM  shift, and go to state 24
+    ID   shift, and go to state 25
+
+    exp  go to state 26
 
 
 state 21
 
-   12 cmd_saida: ESCREVA '(' . exp ')'
+   13 cmd_atribuicao: ID '=' . exp
 
-    NUM  shift, and go to state 26
-    ID   shift, and go to state 27
+    NUM  shift, and go to state 24
+    ID   shift, and go to state 25
 
-    exp  go to state 28
+    exp  go to state 27
 
 
 state 22
-
-   13 cmd_atribuicao: ID '=' . exp
-
-    NUM  shift, and go to state 26
-    ID   shift, and go to state 27
-
-    exp  go to state 29
-
-
-state 23
 
     1 programa: declaracoes '{' lista_cmds '}' .
 
     $default  reduce using rule 1 (programa)
 
 
-state 24
+state 23
 
     8 lista_cmds: cmd ';' .
     9           | cmd ';' . lista_cmds
@@ -283,55 +282,48 @@ state 24
 
     $default  reduce using rule 8 (lista_cmds)
 
-    lista_cmds      go to state 30
+    lista_cmds      go to state 28
     cmd             go to state 16
     cmd_saida       go to state 17
     cmd_atribuicao  go to state 18
 
 
-state 25
-
-    5 linha_decl: lista_id ':' INTEIRO ';' .
-
-    $default  reduce using rule 5 (linha_decl)
-
-
-state 26
+state 24
 
    14 exp: NUM .
 
     $default  reduce using rule 14 (exp)
 
 
-state 27
+state 25
 
    15 exp: ID .
 
     $default  reduce using rule 15 (exp)
 
 
-state 28
+state 26
 
    12 cmd_saida: ESCREVA '(' exp . ')'
 
-    ')'  shift, and go to state 31
+    ')'  shift, and go to state 29
 
 
-state 29
+state 27
 
    13 cmd_atribuicao: ID '=' exp .
 
     $default  reduce using rule 13 (cmd_atribuicao)
 
 
-state 30
+state 28
 
     9 lista_cmds: cmd ';' lista_cmds .
 
     $default  reduce using rule 9 (lista_cmds)
 
 
-state 31
+state 29
 
    12 cmd_saida: ESCREVA '(' exp ')' .
 

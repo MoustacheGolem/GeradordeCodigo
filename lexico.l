@@ -3,6 +3,9 @@
 #include "sintatico.tab.h"
 %}
 %%
+
+
+int {return INT;}
 var		{return VAR;}
 inteiro		{return INTEIRO;}
 escreva		{return ESCREVA;}
