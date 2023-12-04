@@ -48,22 +48,39 @@ static int highEmitLoc = 0;
 	int inteiro;
 	char *cadeia;
 }
-%token INT
+%token INT 
 %token VAR INTEIRO ESCREVA
-%token <inteiro> NUM
-%token <cadeia> ID
+%token <inteiro> NUM 
+%token <cadeia> ID 
+
+//pra carregar contexto do binop
+%token <inteiro> ADD SUB DIV MUL
+%type <inteiro> binop
 
 
 %%
 programa:	declaracoes '{' lista_cmds '}'
 	{
 		printf("\nSintaxe ok.\n");
-		if (erroSemantico) {
-		  printf("\nErro semantico: esqueceu de declarar alguma variavel que usou...");
-		} else {
-		  printf("\nSemantica ok: se variaveis usadas, elas foram declaradas ok.\n");
-		}		
+		switch(erroSemantico){
+			case(1):
+				printf("\nErro semantico: Variavel não declarada");
+			break;
 
+			case(2):
+				printf("\nErro semantico: variavel ja declarada anteriormente");
+			break;
+
+			case(3):
+				printf("\nErro semantico: ");
+			break;
+		}
+			
+		
+		if (erroSemantico <= 0) {
+			printf("\nSemantica ok: se variaveis usadas, elas foram declaradas ok.\n");;
+			
+		}
 	}
 ;
 
@@ -97,12 +114,12 @@ lista_id: ID
 	}
 ;
 lista_cmds:	cmd ';'				{;}
-		| cmd ';' lista_cmds		{;}
+		| cmd ';' lista_cmds	{;}
 ;
 cmd:		cmd_saida			{;}
 		| cmd_atribuicao		{;}
 ;
-cmd_saida:	ESCREVA '(' exp ')'
+cmd_saida:	ESCREVA '(' expr ')'
 	{
 		/* generate code for expression to write */
 //		cGen(tree->child[0]);
@@ -111,15 +128,76 @@ cmd_saida:	ESCREVA '(' exp ')'
 
 	}
 ;
-cmd_atribuicao: ID '=' exp
-	{
-		locMemId = recuperaLocMemId($1);
-		emitRM("ST",ac,locMemId,gp,"atribuicao: armazena valor");
+cmd_atribuicao: ID '=' expr
+	{	if (!constaTabSimb($1)) {
+		  erroSemantico = 1;
+		} else{
+			locMemId = recuperaLocMemId($1);
+			emitRM("ST",ac,locMemId,gp,"atribuicao: armazena valor");
+		}
+		
 	}
 ;
-exp:		NUM
+expr:	NUM
 	{
 		emitRM("LDC",ac,$1,0,"carrega constante em ac");
+	}
+	|	ID
+	{
+		if (!constaTabSimb($1)) {
+		  erroSemantico = 1;
+		} else {
+		  locMemId = recuperaLocMemId($1);
+		  emitRM("LD",ac,locMemId,gp,"carrega valor de id em ac");
+		}
+	}
+	| 	binop expr expr_r
+	{
+		switch($1){
+			case 1:
+				emitRO("ADD",ac,ac,tmp,"soma operandos");
+			break;
+
+			case 2:
+				emitRO("SUB",ac,ac,tmp,"subtrai operandos");
+			break;
+
+			case 3:
+				emitRO("MUL",ac,ac,tmp,"multiplica operandos");
+			break;
+
+			case 4:
+				emitRO("DIV",ac,ac,tmp,"divide operandos");
+			break;
+		}
+				
+	}
+		
+;
+expr_r: binop expr expr_r
+{
+		switch($1){
+			case 1:
+				emitRO("ADD",ac,ac,tmp,"soma operandos");
+			break;
+
+			case 2:
+				emitRO("SUB",ac,ac,tmp,"subtrai operandos");
+			break;
+
+			case 3:
+				emitRO("MUL",ac,ac,tmp,"multiplica operandos");
+			break;
+
+			case 4:
+				emitRO("DIV",ac,ac,tmp,"divide operandos");
+			break;
+		}
+}
+
+	|NUM
+	{
+		emitRM("LDC",tmp,$1,0,"carrega constante em tmp");
 	}
 	|	ID
 	{
@@ -127,9 +205,16 @@ exp:		NUM
 		  erroSemantico=1;
 		} else {
 		  locMemId = recuperaLocMemId($1);
-		  emitRM("LD",ac,locMemId,gp,"carrega valor de id em ac");
+		  emitRM("LD",tmp,locMemId,gp,"carrega valor de id em tmp");
 		}
 	}
+
+binop: 		ADD 
+		| 	SUB
+		|	MUL
+		|	DIV
+		
+	
 ;
 %%
 // SEMANTICO
