@@ -3,6 +3,8 @@ var a : inteiro; {escreva(1);}  programa germana
 
 int a; {escreva(1);}
 
+
+int a ;int a; {}        //erro variavel já declarada
 int a; {a = 123; escreva(a);}
 
 int a; {a = + 1 1;

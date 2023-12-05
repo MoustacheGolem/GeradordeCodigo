@@ -54,7 +54,7 @@ static int highEmitLoc = 0;
 %token <cadeia> ID 
 
 //pra carregar contexto do binop
-%token <inteiro> ADD SUB DIV MUL
+%token  ADD SUB DIV MUL
 %type <inteiro> binop
 
 
@@ -153,6 +153,7 @@ expr:	NUM
 	}
 	| 	binop expr expr_r
 	{
+		
 		switch($1){
 			case 1:
 				emitRO("ADD",ac,ac,tmp,"soma operandos");
@@ -209,10 +210,10 @@ expr_r: binop expr expr_r
 		}
 	}
 
-binop: 		ADD 
-		| 	SUB
-		|	MUL
-		|	DIV
+binop: 		ADD {$$ = 1;}
+		| 	SUB {$$ = 2;}
+		|	MUL {$$ = 3;}
+		|	DIV {$$ = 4;}
 		
 	
 ;

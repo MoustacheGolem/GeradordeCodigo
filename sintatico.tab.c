@@ -1632,10 +1632,38 @@ yyreduce:
 	;}
     break;
 
+  case 21:
+
+/* Line 1455 of yacc.c  */
+#line 212 "sintatico.y"
+    {(yyval.inteiro) = 1;;}
+    break;
+
+  case 22:
+
+/* Line 1455 of yacc.c  */
+#line 213 "sintatico.y"
+    {(yyval.inteiro) = 2;;}
+    break;
+
+  case 23:
+
+/* Line 1455 of yacc.c  */
+#line 214 "sintatico.y"
+    {(yyval.inteiro) = 3;;}
+    break;
+
+  case 24:
+
+/* Line 1455 of yacc.c  */
+#line 215 "sintatico.y"
+    {(yyval.inteiro) = 4;;}
+    break;
+
 
 
 /* Line 1455 of yacc.c  */
-#line 1639 "sintatico.tab.c"
+#line 1667 "sintatico.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);

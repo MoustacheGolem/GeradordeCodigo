@@ -4,10 +4,10 @@
 %}
 %%
 
-\+                      {yylval.inteiro = 1; return ADD;}
-\-                      {yylval.inteiro = 2; return SUB;}
-\*                      {yylval.inteiro = 3; return MUL;}
-\\                      {yylval.inteiro = 4; return DIV;}
+\+                      { return ADD;}
+\-                      { return SUB;}
+\*                      { return MUL;}
+\\                      { return DIV;}
 int                     {return INT;}
 var		                  {return VAR;}
 inteiro		              {return INTEIRO;}

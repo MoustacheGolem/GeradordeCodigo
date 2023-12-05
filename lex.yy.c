@@ -815,22 +815,22 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 YY_RULE_SETUP
 #line 7 "lexico.l"
-{yylval.inteiro = 1; return ADD;}
+{ return ADD;}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
 #line 8 "lexico.l"
-{yylval.inteiro = 2; return SUB;}
+{ return SUB;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
 #line 9 "lexico.l"
-{yylval.inteiro = 3; return MUL;}
+{ return MUL;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
 #line 10 "lexico.l"
-{yylval.inteiro = 4; return DIV;}
+{ return DIV;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
