@@ -60,7 +60,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 42 "sintatico.y"
+#line 44 "sintatico.y"
 
 	int inteiro;
 	char *cadeia;

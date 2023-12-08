@@ -38,6 +38,8 @@ static int emitLoc = 0 ;
    emitBackup, and emitRestore */
 static int highEmitLoc = 0;
 // FIM GERA CODIGO
+
+char *type_info;
 %}
 %union{
 	int inteiro;
@@ -50,9 +52,10 @@ static int highEmitLoc = 0;
 %token <cadeia> ID 
 
 %token  ADD SUB DIV MUL
-%left ADD SUB 
-%left MUL DIV
 
+%left ADD SUB 
+%left DIV MUL
+%type <inteiro> binop 
 %type <cadeia> type lista_id
 
 %%
@@ -83,15 +86,16 @@ programa:	declaracoes '{' lista_cmds '}'
 	}
 ;
 
-type: 	INT		{$$ = "type_int"; }
-		|CHAR	{$$ = "type_char";}
-;
 
 declaracoes: linha_decl			{;}
 		| linha_decl declaracoes	{;}
 ;
 
-linha_decl: type lista_id ';'		{}
+linha_decl: type {type_info = $1;} lista_id ';'	{}
+;
+
+type: 	INT		{$$ = "type_int"; }
+		|CHAR	{$$ = "type_char";}
 ;
 
 lista_id: ID
@@ -102,7 +106,7 @@ lista_id: ID
 			erroSemantico = 2;//erro variavel já declarada
 		}
 		// printf("declarando id\n");
-		colocaSimb($1,"tipo_int","variavel","nao",proxLocMemVar++);
+		colocaSimb($1,type_info,"variavel","nao",proxLocMemVar++);
 	}
 	| ID ',' lista_id
 	{
@@ -111,7 +115,7 @@ lista_id: ID
 			erroSemantico = 2;//erro variavel já declarada
 		}
 		// printf("declarando id\n");
-		colocaSimb($1,"tipo_int","variavel","nao",proxLocMemVar++);
+		colocaSimb($1,type_info,"variavel","nao",proxLocMemVar++);
 	}
 ;
 lista_cmds:	cmd ';'				{;}
@@ -139,7 +143,30 @@ cmd_atribuicao: ID '=' expr
 		
 	}
 ;
-expr:	NUM
+expr:	term
+	| 	expr binop term {
+        switch($2){
+                case 1:
+                    emitRO("ADD",ac,ac,tmp,"soma operandos");
+                break;
+
+                case 2:
+                    emitRO("SUB",ac,ac,tmp,"subtrai operandos");
+                break;
+
+                case 3:
+                    emitRO("MUL",ac,ac,tmp,"multiplica operandos");
+                break;
+
+                case 4:
+                    emitRO("DIV",ac,ac,tmp,"divide operandos");
+                break;
+            }
+	}
+		
+;
+//term eh usao para implicitamente tornar binop associativa a esquerda %left n funciona
+term:	NUM
 	{
 		emitRM("LDC",ac,$1,0,"carrega constante em ac");
 	}
@@ -152,27 +179,13 @@ expr:	NUM
 		  emitRM("LD",ac,locMemId,gp,"carrega valor de id em ac");
 		}
 	}
-	| 	expr ADD expr
-	{
-		emitRO("ADD",ac,ac,tmp,"soma operandos");		
-	}
-	| 	expr SUB expr
-	{
-		emitRO("SUB",ac,ac,tmp,"subtrai operandos");		
-	}
-	| 	expr MUL expr
-	{
-		emitRO("MUL",ac,ac,tmp,"multiplica operandos");		
-	}
-	| 	expr DIV expr
-	{
-		emitRO("SUB",ac,ac,tmp,"divide operandos");		
-	}
-		
-;
+
+binop: 	ADD {$$ = 1;}
+		|SUB {$$ = 2;}
+		|MUL {$$ = 3;}
+		|DIV {$$ = 4;}
 	
 		
-	
 ;
 %%
 // SEMANTICO
@@ -233,6 +246,18 @@ int recuperaLocMemId(char *nomeSimb) {
 	  if (strcmp(ptr->nome,nomeSimb)==0) return ptr->locMem;
 	return -1;
 }
+// printar estrutura da tabela de simbulos
+void imprimeTabSimb(regTabSimb *tabSimb) {
+  regTabSimb *ptr;
+	printf("TabSimb:\n");
+  for (ptr = tabSimb; ptr != NULL; ptr = ptr->prox) {
+    printf("  Nome: %s ,", ptr->nome);
+    printf("Tipo: %s ,", ptr->tipo);
+    printf("Natureza: %s ,", ptr->natureza);
+    printf("Usado: %s ,", ptr->usado);
+    printf("LocMem: %d\n", ptr->locMem);
+  }
+}
 // FIM GERA CODIGO
 
 int main(argc, argv) int argc; char **argv;
@@ -259,13 +284,12 @@ int main(argc, argv) int argc; char **argv;
 	//emitComment("End of standard prelude.");
 
 	yyparse ();
-
+	imprimeTabSimb(tabSimb);
 	//emitComment("End of execution.");
 	emitRO("HALT",0,0,0,"");
 
 		fclose(yyin);
 		fclose(yyout);
-	
 	
 }
 yyerror (s) /* Called by yyparse on error */

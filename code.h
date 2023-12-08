@@ -12,3 +12,4 @@ void emitRM( char * op, int r, int d, int s, char *c);
 
 int recuperaLocMemId(char *nomeSimb);
 int constaTabSimb(char *nomeSimb);
+
