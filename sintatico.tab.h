@@ -41,15 +41,23 @@
    enum yytokentype {
      INT = 258,
      CHAR = 259,
-     VAR = 260,
-     INTEIRO = 261,
-     ESCREVA = 262,
-     NUM = 263,
-     ID = 264,
-     ADD = 265,
-     SUB = 266,
-     DIV = 267,
-     MUL = 268
+     INTEIRO = 260,
+     ESCREVA = 261,
+     NUM = 262,
+     ID = 263,
+     IF = 264,
+     ELSE = 265,
+     WHILE = 266,
+     FOR = 267,
+     RETURN = 268,
+     EXTERN = 269,
+     VOID = 270,
+     ADD = 271,
+     SUB = 272,
+     DIV = 273,
+     MUL = 274,
+     UMINUS = 275,
+     THEN = 276
    };
 #endif
 
@@ -60,7 +68,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 44 "sintatico.y"
+#line 45 "sintatico.y"
 
 	int inteiro;
 	char *cadeia;
@@ -69,7 +77,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 73 "sintatico.tab.h"
+#line 81 "sintatico.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

@@ -1,17 +1,46 @@
-var a : inteiro; {escreva(1);}  programa germana
+var a : inteiro; {escreva(1);}  programa germana, n funciona aqui claro
+//vercao modificada
+int a; {escreva(1);} 
 
+//teste erro variavel já declarada
+int a ;int a; {}   
 
-int a; {escreva(1);}
-
-
-int a ;int a; {}        //erro variavel já declarada
 int a; {a = 123; escreva(a);}
 
-int a; {a = 1 + 1;
-char b,a; {a = 'a';
 
+// testar declarações
 int a,b; {a = 1 + 1;}
 char a,b; {a = 1 + 1;}
 char a;char b; {a = 1 + 1;}
 int a;char b; {a = 1 + 1;}
 int a,b;char c; {a = 1 + 1;}
+
+//pra testar numero negativo, n implementado
+int a; {a = - 2 + 4;}
+int a; {a = - 2 + - 4;}
+int a; {a = - 2 + - 4 + 6;}
+
+//pra testar () , n implementado
+int a; {a = 2 + (1 + 1);}
+
+//testar if, gerador de codigo n implementado
+int a,b; {
+    a = 1; 
+    if (a) {
+        escreva(a);
+        }
+    }
+
+// if else
+
+int a,b; {
+    a = 1; 
+    if (a) {
+        escreva(a);
+        }
+    else{
+        escreva(0);
+    }
+    }
+// testar while, gerador de codigo n implementado
+int a,b; {a = 10; while (a) a = a -1;}

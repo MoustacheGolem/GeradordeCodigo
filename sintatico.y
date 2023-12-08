@@ -40,6 +40,7 @@ static int highEmitLoc = 0;
 // FIM GERA CODIGO
 
 char *type_info;
+int val_info = 1;
 %}
 %union{
 	int inteiro;
@@ -47,16 +48,23 @@ char *type_info;
 
 }
 %token INT CHAR
-%token VAR INTEIRO ESCREVA
+%token INTEIRO ESCREVA
 %token <inteiro> NUM 
 %token <cadeia> ID 
 
+%token IF ELSE              
+%token WHILE FOR RETURN EXTERN VOID
+
 %token  ADD SUB DIV MUL
 
-%left ADD SUB 
+%left ADD SUB UMINUS
 %left DIV MUL
-%type <inteiro> binop 
+%type <inteiro> binop term expr term2
 %type <cadeia> type lista_id
+
+
+%nonassoc THEN
+%nonassoc ELSE
 
 %%
 programa:	declaracoes '{' lista_cmds '}'
@@ -119,11 +127,25 @@ lista_id: ID
 	}
 ;
 lista_cmds:	cmd ';'				{;}
-		| cmd ';' lista_cmds	{;}
-;
-cmd:		cmd_saida			{;}
+			| cmd ';' lista_cmds	{;}
+			| stmt
+			| stmt lista_cmds
+
+cmd:	 cmd_saida			{;}
 		| cmd_atribuicao		{;}
 ;
+
+stmt: 	stmt_if
+		| stmt_while
+
+stmt_if:  	IF '(' expr ')' '{' lista_cmds'}'   %prec THEN
+		{printf("if DETECTED\n");} 
+		|   IF '(' expr ')' '{' lista_cmds '}' ELSE '{'lista_cmds '}' 
+		{printf("ifelse DETECTED\n");}
+
+stmt_while: WHILE '('expr')' '{' lista_cmds'}'  
+		{printf("while DETECTED\n");}
+
 cmd_saida:	ESCREVA '(' expr ')'
 	{
 		/* generate code for expression to write */
@@ -140,11 +162,12 @@ cmd_atribuicao: ID '=' expr
 			locMemId = recuperaLocMemId($1);
 			emitRM("ST",ac,locMemId,gp,"atribuicao: armazena valor");
 		}
-		
 	}
 ;
+
+
 expr:	term
-	| 	expr binop term {
+	| 	expr binop term2 {
         switch($2){
                 case 1:
                     emitRO("ADD",ac,ac,tmp,"soma operandos");
@@ -163,12 +186,14 @@ expr:	term
                 break;
             }
 	}
-		
+	// | '(' expr ')' {$$ =$2;}
+	
+	// |	 SUB {val_info = -1;} expr  {;}
 ;
-//term eh usao para implicitamente tornar binop associativa a esquerda %left n funciona
+//term eh usado para implicitamente tornar binop associativa a esquerda %left n funciona com regras
 term:	NUM
 	{
-		emitRM("LDC",ac,$1,0,"carrega constante em ac");
+		emitRM("LDC",ac,$1*val_info,0,"carrega constante em ac");
 	}
 	|	ID
 	{
@@ -178,7 +203,23 @@ term:	NUM
 		  locMemId = recuperaLocMemId($1);
 		  emitRM("LD",ac,locMemId,gp,"carrega valor de id em ac");
 		}
+	}	
+	
+	
+term2:	NUM
+	{
+		emitRM("LDC",tmp,$1,0,"carrega constante em ac");
 	}
+	|	ID
+	{
+		if (!constaTabSimb($1)) {
+		  erroSemantico = 1;
+		} else {
+		  locMemId = recuperaLocMemId($1);
+		  emitRM("LD",tmp,locMemId,gp,"carrega valor de id em ac");
+		}
+	}
+	// | '(' expr ')' {$$ = $2;}
 
 binop: 	ADD {$$ = 1;}
 		|SUB {$$ = 2;}
