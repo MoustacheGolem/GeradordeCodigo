@@ -40,15 +40,16 @@
       know about them.  */
    enum yytokentype {
      INT = 258,
-     VAR = 259,
-     INTEIRO = 260,
-     ESCREVA = 261,
-     NUM = 262,
-     ID = 263,
-     ADD = 264,
-     SUB = 265,
-     DIV = 266,
-     MUL = 267
+     CHAR = 259,
+     VAR = 260,
+     INTEIRO = 261,
+     ESCREVA = 262,
+     NUM = 263,
+     ID = 264,
+     ADD = 265,
+     SUB = 266,
+     DIV = 267,
+     MUL = 268
    };
 #endif
 
@@ -59,15 +60,16 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 47 "sintatico.y"
+#line 42 "sintatico.y"
 
 	int inteiro;
 	char *cadeia;
 
 
 
+
 /* Line 1676 of yacc.c  */
-#line 71 "sintatico.tab.h"
+#line 73 "sintatico.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

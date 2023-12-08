@@ -3,11 +3,6 @@
 #include <stdio.h>
 #include "code.h"
 
-void emitRO( char *op, int r, int s, int t, char *c);
-void emitRM( char * op, int r, int d, int s, char *c);
-
-int recuperaLocMemId(char *nomeSimb);
-int constaTabSimb(char *nomeSimb);
 
 //#define YYDEBUG 1
 
@@ -47,16 +42,18 @@ static int highEmitLoc = 0;
 %union{
 	int inteiro;
 	char *cadeia;
+
 }
-%token INT 
+%token INT CHAR
 %token VAR INTEIRO ESCREVA
 %token <inteiro> NUM 
 %token <cadeia> ID 
 
-//pra carregar contexto do binop
 %token  ADD SUB DIV MUL
-%type <inteiro> binop
+%left ADD SUB 
+%left MUL DIV
 
+%type <cadeia> type lista_id
 
 %%
 programa:	declaracoes '{' lista_cmds '}'
@@ -81,21 +78,25 @@ programa:	declaracoes '{' lista_cmds '}'
 			printf("\nSemantica ok: se variaveis usadas, elas foram declaradas ok.\n");;
 			
 		}
+
+		YYACCEPT;
 	}
 ;
 
-type: INT {;}
+type: 	INT		{$$ = "type_int"; }
+		|CHAR	{$$ = "type_char";}
 ;
 
 declaracoes: linha_decl			{;}
 		| linha_decl declaracoes	{;}
 ;
 
-linha_decl: type lista_id ';'		{;}
+linha_decl: type lista_id ';'		{}
 ;
 
 lista_id: ID
 	{	
+		
 		if(constaTabSimb($1)){
 			// printf("variavel já declarada\n");
 			erroSemantico = 2;//erro variavel já declarada
@@ -151,69 +152,25 @@ expr:	NUM
 		  emitRM("LD",ac,locMemId,gp,"carrega valor de id em ac");
 		}
 	}
-	| 	binop expr expr_r
+	| 	expr ADD expr
 	{
-		
-		switch($1){
-			case 1:
-				emitRO("ADD",ac,ac,tmp,"soma operandos");
-			break;
-
-			case 2:
-				emitRO("SUB",ac,ac,tmp,"subtrai operandos");
-			break;
-
-			case 3:
-				emitRO("MUL",ac,ac,tmp,"multiplica operandos");
-			break;
-
-			case 4:
-				emitRO("DIV",ac,ac,tmp,"divide operandos");
-			break;
-		}
-				
+		emitRO("ADD",ac,ac,tmp,"soma operandos");		
+	}
+	| 	expr SUB expr
+	{
+		emitRO("SUB",ac,ac,tmp,"subtrai operandos");		
+	}
+	| 	expr MUL expr
+	{
+		emitRO("MUL",ac,ac,tmp,"multiplica operandos");		
+	}
+	| 	expr DIV expr
+	{
+		emitRO("SUB",ac,ac,tmp,"divide operandos");		
 	}
 		
 ;
-expr_r: binop expr expr_r
-{
-		switch($1){
-			case 1:
-				emitRO("ADD",ac,ac,tmp,"soma operandos");
-			break;
-
-			case 2:
-				emitRO("SUB",ac,ac,tmp,"subtrai operandos");
-			break;
-
-			case 3:
-				emitRO("MUL",ac,ac,tmp,"multiplica operandos");
-			break;
-
-			case 4:
-				emitRO("DIV",ac,ac,tmp,"divide operandos");
-			break;
-		}
-}
-
-	|NUM
-	{
-		emitRM("LDC",tmp,$1,0,"carrega constante em tmp");
-	}
-	|	ID
-	{
-		if (!constaTabSimb($1)) {
-		  erroSemantico=1;
-		} else {
-		  locMemId = recuperaLocMemId($1);
-		  emitRM("LD",tmp,locMemId,gp,"carrega valor de id em tmp");
-		}
-	}
-
-binop: 		ADD {$$ = 1;}
-		| 	SUB {$$ = 2;}
-		|	MUL {$$ = 3;}
-		|	DIV {$$ = 4;}
+	
 		
 	
 ;

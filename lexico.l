@@ -8,7 +8,8 @@
 \-                      { return SUB;}
 \*                      { return MUL;}
 \\                      { return DIV;}
-int                     {return INT;}
+int                   {return INT;}
+char                  {return CHAR;}
 var		                  {return VAR;}
 inteiro		              {return INTEIRO;}
 escreva		              {return ESCREVA;}

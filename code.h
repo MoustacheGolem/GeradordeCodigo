@@ -7,3 +7,8 @@ int gp = 333; // global pointer
 int tmp = 444;
 bool tracecode = true;
 
+void emitRO( char *op, int r, int s, int t, char *c);
+void emitRM( char * op, int r, int d, int s, char *c);
+
+int recuperaLocMemId(char *nomeSimb);
+int constaTabSimb(char *nomeSimb);
