@@ -43,4 +43,4 @@ int a,b; {
     }
     }
 // testar while, gerador de codigo n implementado
-int a,b; {a = 10; while (a) a = a -1;}
+int a,b; {a = 10; while (a) {a = a -1;}}
