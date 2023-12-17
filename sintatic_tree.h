@@ -35,26 +35,24 @@ enum REG {
 union ARG {
     int imediate;
     char* label;
-    REG regs;
+    enum REG regs;
 };
 
 
-ac = 1
-
 typedef struct astNode{
-    AST_TYPE type;
-    ARG arg1;
-    ARG arg2;
-    ARG arg3;
+    enum AST_TYPE type;
+    union ARG arg1;
+    union ARG arg2;
+    union ARG arg3;
     char* label;
-    astNode* left;
-    astNode* right;
+    struct astNode* left;
+    struct astNode* right;
 } astNode;
 
-astNode* createAstNode(AST_TYPE type, ARG arg1, ARG arg2, ARG arg3, char* label)
+struct astNode* createAstNode(enum AST_TYPE type, union ARG arg1, union ARG arg2, union ARG arg3, char* label)
 {
-    astNode* node = NULL;
-    node = (astNode*) malloc(sizeof(astNode));
+    struct astNode* node = NULL;
+    node = (struct astNode*) malloc(sizeof(astNode));
     node->type = type;
     node->arg1 = arg1;
     node->arg2 = arg2;
@@ -64,12 +62,13 @@ astNode* createAstNode(AST_TYPE type, ARG arg1, ARG arg2, ARG arg3, char* label)
     return node;
 }
 
-astNode* appendNodes(astNode* left, astNode* right;)
-{
-    astNode* nodeAppend = createAstNode(AST_APPEND, AST_NONE, AST_NONE, AST_NONE, "");
-	nodeAppend.left = $1;
-	nodeAppend.right = $2;
+struct astNode* appendNodes(struct astNode* left, struct astNode* right)
+{   
+    //create node with args = 0
+    struct astNode* nodeAppend = createAstNode(AST_APPEND, (union ARG)0, (union ARG)0, (union ARG)0, NULL);
+	nodeAppend->left =  left;
+	nodeAppend->right = right;
     return nodeAppend;
 }
 
-extern astNode* astRoot;
+extern struct astNode* astRoot;

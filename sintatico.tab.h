@@ -75,11 +75,11 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 45 "sintatico.y"
+#line 53 "sintatico.y"
 
 	int inteiro;
 	char *cadeia;
-
+	struct astNode* node;
 
 #line 85 "sintatico.tab.h"
 
