@@ -5,7 +5,8 @@
 enum AST_TYPE
 {
     AST_ADD,
-    AST_SUB,
+    AST_ADDI,
+    AST_SUB, 
     AST_MUL,
     AST_DIV,
     AST_IN,
@@ -19,14 +20,26 @@ enum AST_TYPE
     AST_JEQ,
     AST_JNE,
     AST_LABEL,
-    AST_NONE
+    AST_NONE,
+    AST_ERROR,
+    AST_APPEND
+};
+
+enum REG {
+    RS,
+    AC,
+    AU,
+    ZERO
 };
 
 union ARG {
     int imediate;
     char* label;
-    int reg;
+    REG regs;
 };
+
+
+ac = 1
 
 typedef struct astNode{
     AST_TYPE type;
@@ -51,4 +64,12 @@ astNode* createAstNode(AST_TYPE type, ARG arg1, ARG arg2, ARG arg3, char* label)
     return node;
 }
 
-extern astNode* astToot;
+astNode* appendNodes(astNode* left, astNode* right;)
+{
+    astNode* nodeAppend = createAstNode(AST_APPEND, AST_NONE, AST_NONE, AST_NONE, "");
+	nodeAppend.left = $1;
+	nodeAppend.right = $2;
+    return nodeAppend;
+}
+
+extern astNode* astRoot;

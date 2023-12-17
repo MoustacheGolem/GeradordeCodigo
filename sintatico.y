@@ -1,48 +1,53 @@
 %{
-#include <stdio.h>
-#include "code.h"
-#include "sintatic_tree.h"
+	#include <stdio.h>
+	#include "code.h"
+	#include "sintatic_tree.h"
 
-//#define YYDEBUG 1
+	//#define YYDEBUG 1
 
-extern FILE *yyin;
-extern FILE *yyout;
+	extern FILE *yyin;
+	extern FILE *yyout;
 
-// SEMANTICO
-struct regTabSimb {
-	char *nome; /* nome do simbolo */
-	char *tipo; /* tipo_int ou tipo_cad ou nsa */
-	char *natureza; /* variavel ou procedimento */
-	char *usado; /* sim ou nao */
-	int locMem;
-	struct regTabSimb *prox; /* ponteiro */
-};
+	// SEMANTICO
+	struct regTabSimb {
+		char *nome; /* nome do simbolo */
+		char *tipo; /* tipo_int ou tipo_cad ou nsa */
+		char *natureza; /* variavel ou procedimento */
+		char *usado; /* sim ou nao */
+		int locMem;
+		struct regTabSimb *prox; /* ponteiro */
+	};
 
-typedef struct regTabSimb regTabSimb;
-regTabSimb *tabSimb = (regTabSimb *)0;
-regTabSimb *colocaSimb();
-int erroSemantico;
+	typedef struct regTabSimb regTabSimb;
+	regTabSimb *tabSimb = (regTabSimb *)0;
+	regTabSimb *colocaSimb();
+	int erroSemantico;
 
-static int proxLocMemVar = 0;
-// FIM SEMANTICO
+	static int proxLocMemVar = 0;
+	// FIM SEMANTICO
 
-// GERA CODIGO
-int locMemId = 0; /* para recuperacao na TS */
+	// GERA CODIGO
+	int locMemId = 0; /* para recuperacao na TS */
 
-/* TM location number for current instruction emission */
-static int emitLoc = 0 ;
+	/* TM location number for current instruction emission */
+	static int emitLoc = 0 ;
 
-/* Highest TM location emitted so far
-   For use in conjunction with emitSkip,
-   emitBackup, and emitRestore */
-static int highEmitLoc = 0;
-// FIM GERA CODIGO
+	/* Highest TM location emitted so far
+	For use in conjunction with emitSkip,
+	emitBackup, and emitRestore */
+	static int highEmitLoc = 0;
+	// FIM GERA CODIGO
+
+	static int labelIf = 0;
+	static int labelFor = 0;
+	static int labelIWhile = 0;
 
 
-char *type_info;
-int val_info = 1;
+	char *type_info;
+	int val_info = 1;
 %}
 
+// ------------------------------------------------ TIPOS e PRIORIDADE ------------------------------------------------
 
 %union{
 	int inteiro;
@@ -68,6 +73,9 @@ int val_info = 1;
 %nonassoc ELSE
 
 %%
+
+// ------------------------------------------------ SINTATICO------------------------------------------------
+
 programa: declaracoes '{' lista_cmds '}'
 	{
 		printf("\nok programa\n");
@@ -88,17 +96,23 @@ programa: declaracoes '{' lista_cmds '}'
 			break;
 		}
 
-		astRoot = createAstNode(AST_LABEL, AST_NONE, AST_NONE, AST_NONE, "BEGIN");
-		astRoot.left = $1;
-		astRoot.right = $3;
+		if(erroSemantico == 0)
+		{
+			astRoot = $3;
+		}
+		else
+		{
+			astRoot = createAstNode(AST_ERROR, 0, 0, 0, "");
+		}
+		
 
 		YYACCEPT;
 	}
 ;
 
 
-declaracoes: linha_decl			{;}
-		| linha_decl declaracoes	{;}
+declaracoes: linha_decl				{;}
+		| linha_decl declaracoes 	{;}
 ;
 
 linha_decl: type {type_info = $1;} lista_id ';'	{}
@@ -111,160 +125,275 @@ type: 	INT		{$$ = "type_int"; }
 lista_id: ID
 	{	
 		
-		if(constaTabSimb($1)){
-			// printf("variavel já declarada\n");
-			erroSemantico = 2;//erro variavel já declarada
+		if(constaTabSimb($1))
+		{
+			erroSemantico = 2;a
 		}
-		// printf("declarando id\n");
+
 		colocaSimb($1,type_info,"variavel","nao",proxLocMemVar++);
 	}
 	| ID ',' lista_id
 	{
-		if(constaTabSimb($1)){
-			// printf("variavel já declarada\n");
-			erroSemantico = 2;//erro variavel já declarada
+		if(constaTabSimb($1))
+		{
+			erroSemantico = 2;
 		}
-		// printf("declarando id\n");
+		else
 		colocaSimb($1,type_info,"variavel","nao",proxLocMemVar++);
 	}
 ;
-lista_cmds:	cmd ';'				{;}
-			| cmd ';' lista_cmds	{;}
-			| stmt
-			| stmt lista_cmds
 
-cmd:	 cmd_saida			{;}
-		| cmd_atribuicao		{;}
+lista_cmds:	cmd ';'					{$$ = $1;}
+			| stmt					{$$ = $1;}
+			| cmd ';' lista_cmds	{$$ = appendNodes($1, $2);}
+			| stmt lista_cmds 		{$$ = appendNodes($1, $2);}
+;		
+
+cmd:	 cmd_saida			{$$ = $1 ;}
+		| cmd_atribuicao	{$$ = $1 ;}
 ;
 
-stmt: 	stmt_if
-		| stmt_while
-		| stmt_for
+stmt: 	stmt_if 		{$$ = $1;}
+		| stmt_while 	{$$ = $1;}
+		| stmt_for 		{$$ = $1;}
+;
+
 
 stmt_if:  	IF '(' expr ')' '{' lista_cmds'}'   %prec THEN
-		{printf("if DETECTED\n");} 
-		|   IF '(' expr ')' '{' lista_cmds '}' ELSE '{'lista_cmds '}' 
-		{
-			// $$ = valor 
-			// push $2
-			// push beq
-			// push $3
+	{
+		$$ = 
+		appendNodes($3 , 
+			appendNodes(createAstNode(AST_JGT, RS, ZERO, "IF#"+atoi(labelIf), ""), 
+				appendNodes($6, createAstNode(AST_LABEL, 0, 0, 0, "IF#"+atoi(labelIf)))));
+		labelIf++;
+		
+	} 
+	|   IF '(' expr ')' '{' lista_cmds '}' ELSE '{'lista_cmds '}' 
+	{
+		astNode* nodeLeft = 
+		appendNodes($3 , 
+			appendNodes(createAstNode(AST_JGT, RS, ZERO, "ELSE#"+atoi(labelIf), ""), 
+					appendNodes($6, 
+						appendNodes(createAstNode(AST_LABEL, 0, 0, 0, "")), createAstNode(AST_JEQ, 0, 0, 0, "ENDIF#"+atoi(labelIf)))));
 
-			printf("ifelse DETECTED\n");
-		}
+		astNode* nodeRight = 
+		appendNodes(createAstNode(AST_LABEL, 0, 0, 0, "ELSE#"+atoi(labelIf)),
+			appendNodes($10, createAstNode(AST_LABEL, 0, 0, 0, "ENDIF#"+atoi(labelIf))));
+
+		
+		$$ = appendNodes(nodeLeft, nodeRight);
+		labelIf++;
+	}
+;
 
 stmt_while: WHILE '('expr')' '{' lista_cmds'}'  
-		{
-			// push jump lable
-			// push $3
-			// push $2
-			// push beq
-			// printf("ifelse DETECTED\n");
-		}
-
-// func: type ID'(' declaracoes ')' '{' lista_cmds '}'
 	{
-		// push label na lsita de comandos
-		// push dos registradores store em todos
-		// push na lsita de comandos
-		// push loads
-		// remove na tabela de simbolos
+		$$ = 
+		appendNodes(createAstNode(AST_JEQ, ZERO, ZERO, 0, "WHILE#"+atoi(labelWhile)),
+			appendNode(createAstNode(AST_LABEL, 0, 0, 0, "WHILEB#"+atoi(labelWhile)) ,
+				appendNodes($6,
+					appendNodes($3, createAstNode(AST_JGT, RS, ZERO, "WHILEB#"+atoi(labelWhile), "")))));
+		labelWhile++;
 	}
+;
 
-stmt_for: FOR '(' cmd_atribuicao  for_expr  expr ')' '{' lista_cmds'}'  
-		{
-			printf("for DETECTED\n");
-		}	
 
-for_atr: cmd_atribuicao ';' | ';' 
 
-for_expr: expr ';' | ';'
+// stmt_for: FOR '(' cmd_atribuicao  for_expr  expr ')' '{' lista_cmds'}'  
+// 	{
+// 		astNode* rootFor = NULL
+// 		if($3 != NULL)
+// 		{
+// 			rootFor = $3
+// 		}
+
+// 		lastNode* labelFor = createAstNode(AST_LABEL, 0, 0, 0, "FOR#");
+// 		rootFor == NULL ? rootFor = labelFor : rootFor.left = labelFor;
+
+
+// 		lastNode* nodeExpr = createAstNode(AST_LABEL, 0, 0, 0, "FOR#");
+// 		else if($4 != NULL)
+// 		{
+// 			rootFor.left == NULL ? rootFor.left = $4 : rootFor.right = nodeExpr.left = 4;
+// 		}	
+
+// 		root createAstNode(AST_JE, 0, 0, 0, "");
+
+// 		else if($5 != NULL)
+// 		{
+
+// 		}
+// 		createAstNode(AST_JE, 0, 0, 0, "");
+// 		createAstNode(AST_LABEL, 0, 0, 0, "FINALFOR#");
+
+// 	}
+;
+
+// for_atr:  term  
+// 		| ';' { $$ = NULL; } 
+// 		| cmd_atribuicao ';'
+	
+// 	{	
+// 		if (!constaTabSimb($1)) 
+// 		{
+// 		  	erroSemantico = 1;
+// 		} else{
+// 			locMemId = recuperaLocMemId($1);
+// 			emitRM("ST",ac,locMemId,gp,"atribuicao: armazena valor");
+// 			$$ = createAstNode(AST_MUL, 0, 0, 0, "");
+// 		}
+// 	}
+// ;
+		
+// // TODO ADD index for label
+// for_expr: expr ';' 	{ $$ = createAstNode(AST_NONE, 0, 0, 0, ""); }
+// 		| ';' 		{ $$ = NULL; }
+// ;
 
 cmd_saida:	ESCREVA '(' expr ')'
 	{
-		/* generate code for expression to write */
-//		cGen(tree->child[0]);
-		/* now output it */
+		$$ = createAstNode(AST_OUT, RS, 0, 0, "");
 		emitRO("OUT",ac,0,0,"escreve ac");
-
 	}
 ;
+
 cmd_atribuicao: ID '=' expr
-	{	if (!constaTabSimb($1)) {
-		  erroSemantico = 1;
-		} else{
+	{	
+		if (!constaTabSimb($1)) 
+		{
+		  	erroSemantico = 1;
+		  	$$ = createAstNode(AST_ERROR, 0, 0, 0, "");
+		} else
+		{
 			// push st
 			locMemId = recuperaLocMemId($1);
 			emitRM("ST",ac,locMemId,gp,"atribuicao: armazena valor");
+			$$ = createAstNode(AST_ST, RS, 1, locMemId, "");
 		}
+		
 	}
 ;
 
 
 expr:	term
-	| 	expr binop term2 {
+	| 	expr binop term2 
+	{
         switch($2){
-                case 1:
-                    emitRO("ADD",ac,ac,tmp,"soma operandos");
-                break;
+			// TODO see registers
+			case 1:
+				emitRO("ADD",ac,ac,tmp,"soma operandos");
+				$$ = createAstNode(AST_ADD, RS, AC, AU, "");
+			break;
 
-                case 2:
-                    emitRO("SUB",ac,ac,tmp,"subtrai operandos");
-                break;
+			case 2:
+				emitRO("SUB",ac,ac,tmp,"subtrai operandos");
+				$$ = createAstNode(AST_SUB, RS, AC, AU, "");
+			break;
 
-                case 3:
-                    emitRO("MUL",ac,ac,tmp,"multiplica operandos");
-                break;
+			case 3:
+				emitRO("MUL",ac,ac,tmp,"multiplica operandos");
+				$$ = createAstNode(AST_MUL, RS, AC, AU, "");
+			break;
 
-                case 4:
-                    emitRO("DIV",ac,ac,tmp,"divide operandos");
-                break;
-            }
+			case 4:
+				emitRO("DIV",ac,ac,tmp,"divide operandos");
+				$$ = createAstNode(AST_DIV, RS, AC, AU, "");
+			break;
+
+			case 5:
+				emitRO("DIV",ac,ac,tmp,"divide operandos");
+				$$ = createAstNode(AST_LT, RS, AC, AU, "");
+			break;
+
+			case 6:
+				emitRO("DIV",ac,ac,tmp,"divide operandos");
+				$$ = createAstNode(AST_LE, RS, AC, AU, "");
+			break;
+
+			case 7:
+				emitRO("DIV",ac,ac,tmp,"divide operandos");
+				$$ = createAstNode(AST_GT, RS, AC, AU, "");
+			break;
+
+			case 8:
+				emitRO("DIV",ac,ac,tmp,"divide operandos");
+				$$ = createAstNode(AST_GE, RS, AC, AU, "");
+			break;
+
+			case 9:
+				emitRO("DIV",ac,ac,tmp,"divide operandos");
+				$$ = createAstNode(AST_EQ, RS, AC, AU, "");
+			break;
+		}
 	}
-	// | '(' expr ')' {$$ =$2;}
-	
-	// |	 SUB {val_info = -1;} expr  {;}
 ;
-//term eh usado para implicitamente tornar binop associativa a esquerda %left n funciona com regras
+
+binop: 	ADD 	{$$ = 1;}
+		|SUB 	{$$ = 2;}
+		|MUL 	{$$ = 3;}
+		|DIV 	{$$ = 4;}	
+		|LT 	{$$ = 5;}	
+		|LE 	{$$ = 6;}	
+		|GT 	{$$ = 7;}	
+		|GE 	{$$ = 8;}	
+		|EQ 	{$$ = 9;}	
+;
+
 term:	NUM
 	{
 		emitRM("LDC",ac,$1*val_info,0,"carrega constante em ac");
+		$$ = createAstNode(AST_ADDI, AC, zero, $1, "");
 	}
 	|	ID
 	{
-		if (!constaTabSimb($1)) {
+		if (!constaTabSimb($1)) 
+		{
 		  erroSemantico = 1;
+		  $$ = NULL;
 		} else {
 		  locMemId = recuperaLocMemId($1);
 		  emitRM("LD",ac,locMemId,gp,"carrega valor de id em ac");
+		  $$ = appendNode(createAstNode(AST_LD, RS, 1, locMemId, "")  ,createAstNode(AST_ADD, AC, ZERO, RS, "")) ;
 		}
 	}	
-	
+;	
 	
 term2:	NUM
 	{
 		emitRM("LDC",tmp,$1,0,"carrega constante em ac");
+		$$ = createAstNode(AST_ADDI, AU, zero, $1, "");
 	}
 	|	ID
 	{
-		if (!constaTabSimb($1)) {
+		if (!constaTabSimb($1)) 
+		{
 		  erroSemantico = 1;
+		  $$ = NULL;
 		} else {
 		  locMemId = recuperaLocMemId($1);
 		  emitRM("LD",tmp,locMemId,gp,"carrega valor de id em ac");
+		   $$ = appendNode(createAstNode(AST_LD, RS, 1, locMemId, "")  ,createAstNode(AST_ADD, AU, ZERO, RS, "")) ;
 		}
 	}
-	// | '(' expr ')' {$$ = $2;}
-
-binop: 	ADD {$$ = 1;}
-		|SUB {$$ = 2;}
-		|MUL {$$ = 3;}
-		|DIV {$$ = 4;}
-	
-		
 ;
+
+// func: type ID'(' declaracoes ')' '{' lista_cmds '}'
+	// {
+		// push label na lsita de comandos
+		// push dos registradores store em todos
+		// push na lsita de comandos
+		// push loads
+		// remove na tabela de simbolos
+	// }
+;
+
 %%
-// SEMANTICO
+
+
+
+// ------------------------------------------------ SEMANTICO ------------------------------------------------
+
+
 regTabSimb *colocaSimb(char *nomeSimb, char *tipoSimb, char *naturezaSimb, char *usadoSimb,int loc){
 	regTabSimb *ptr;
 	ptr = (regTabSimb *) malloc (sizeof(regTabSimb));
