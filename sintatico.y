@@ -1,8 +1,7 @@
-/* gera codigo para cmd de saida com constante numerica inteira */
 %{
 #include <stdio.h>
 #include "code.h"
-
+#include "sintatic_tree.h"
 
 //#define YYDEBUG 1
 
@@ -39,38 +38,43 @@ static int emitLoc = 0 ;
 static int highEmitLoc = 0;
 // FIM GERA CODIGO
 
+
 char *type_info;
 int val_info = 1;
 %}
+
+
 %union{
 	int inteiro;
 	char *cadeia;
-
+	astNode* node;
 }
+
 %token INT CHAR
 %token INTEIRO ESCREVA
 %token <inteiro> NUM 
 %token <cadeia> ID 
-
 %token IF ELSE              
 %token WHILE FOR RETURN EXTERN VOID
-
 %token  ADD SUB DIV MUL
 
 %left ADD SUB UMINUS
 %left DIV MUL
+
 %type <inteiro> binop term expr term2
 %type <cadeia> type lista_id
-
 
 %nonassoc THEN
 %nonassoc ELSE
 
 %%
-programa:	declaracoes '{' lista_cmds '}'
+programa: declaracoes '{' lista_cmds '}'
 	{
-		printf("\nSintaxe ok.\n");
+		printf("\nok programa\n");
 		switch(erroSemantico){
+			case(0):
+				printf("\nO programa não possui erros semânticos");
+			break;
 			case(1):
 				printf("\nErro semantico: Variavel não declarada");
 			break;
@@ -83,12 +87,10 @@ programa:	declaracoes '{' lista_cmds '}'
 				printf("\nErro semantico: ");
 			break;
 		}
-			
-		
-		if (erroSemantico <= 0) {
-			printf("\nSemantica ok: se variaveis usadas, elas foram declaradas ok.\n");;
-			
-		}
+
+		astRoot = createAstNode(AST_LABEL, AST_NONE, AST_NONE, AST_NONE, "BEGIN");
+		astRoot.left = $1;
+		astRoot.right = $3;
 
 		YYACCEPT;
 	}
@@ -137,14 +139,46 @@ cmd:	 cmd_saida			{;}
 
 stmt: 	stmt_if
 		| stmt_while
+		| stmt_for
 
 stmt_if:  	IF '(' expr ')' '{' lista_cmds'}'   %prec THEN
 		{printf("if DETECTED\n");} 
 		|   IF '(' expr ')' '{' lista_cmds '}' ELSE '{'lista_cmds '}' 
-		{printf("ifelse DETECTED\n");}
+		{
+			// $$ = valor 
+			// push $2
+			// push beq
+			// push $3
+
+			printf("ifelse DETECTED\n");
+		}
 
 stmt_while: WHILE '('expr')' '{' lista_cmds'}'  
-		{printf("while DETECTED\n");}
+		{
+			// push jump lable
+			// push $3
+			// push $2
+			// push beq
+			// printf("ifelse DETECTED\n");
+		}
+
+// func: type ID'(' declaracoes ')' '{' lista_cmds '}'
+	{
+		// push label na lsita de comandos
+		// push dos registradores store em todos
+		// push na lsita de comandos
+		// push loads
+		// remove na tabela de simbolos
+	}
+
+stmt_for: FOR '(' cmd_atribuicao  for_expr  expr ')' '{' lista_cmds'}'  
+		{
+			printf("for DETECTED\n");
+		}	
+
+for_atr: cmd_atribuicao ';' | ';' 
+
+for_expr: expr ';' | ';'
 
 cmd_saida:	ESCREVA '(' expr ')'
 	{
@@ -159,6 +193,7 @@ cmd_atribuicao: ID '=' expr
 	{	if (!constaTabSimb($1)) {
 		  erroSemantico = 1;
 		} else{
+			// push st
 			locMemId = recuperaLocMemId($1);
 			emitRM("ST",ac,locMemId,gp,"atribuicao: armazena valor");
 		}
@@ -303,6 +338,9 @@ void imprimeTabSimb(regTabSimb *tabSimb) {
 
 int main(argc, argv) int argc; char **argv;
 	{
+	int ra, rd, rs, r, rz, ra;
+
+
 //	extern int yydebug;
 //	yydebug=1;
 
