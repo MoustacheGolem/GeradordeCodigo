@@ -17,7 +17,7 @@ Grammar
     2 declaracoes: linha_decl
     3            | linha_decl declaracoes
 
-    4 $@1: %empty
+    4 $@1: ε
 
     5 linha_decl: type $@1 lista_id ';'
 
@@ -101,10 +101,10 @@ Nonterminals, with rules where they appear
     programa (30)
         on left: 1
         on right: 0
-    declaracoes (31)
+    declaracoes <node> (31)
         on left: 2 3
         on right: 1 3
-    linha_decl (32)
+    linha_decl <node> (32)
         on left: 5
         on right: 2 3
     $@1 (33)
@@ -113,7 +113,7 @@ Nonterminals, with rules where they appear
     type <cadeia> (34)
         on left: 6 7
         on right: 5
-    lista_id <cadeia> (35)
+    lista_id <node> (35)
         on left: 8 9
         on right: 5 9
     lista_cmds <node> (36)
@@ -153,7 +153,7 @@ Nonterminals, with rules where they appear
 
 State 0
 
-    0 $accept: . programa $end
+    0 $accept: • programa $end
 
     INT   shift, and go to state 1
     CHAR  shift, and go to state 2
@@ -166,36 +166,36 @@ State 0
 
 State 1
 
-    6 type: INT .
+    6 type: INT •
 
     $default  reduce using rule 6 (type)
 
 
 State 2
 
-    7 type: CHAR .
+    7 type: CHAR •
 
     $default  reduce using rule 7 (type)
 
 
 State 3
 
-    0 $accept: programa . $end
+    0 $accept: programa • $end
 
     $end  shift, and go to state 7
 
 
 State 4
 
-    1 programa: declaracoes . '{' lista_cmds '}'
+    1 programa: declaracoes • '{' lista_cmds '}'
 
     '{'  shift, and go to state 8
 
 
 State 5
 
-    2 declaracoes: linha_decl .
-    3            | linha_decl . declaracoes
+    2 declaracoes: linha_decl •
+    3            | linha_decl • declaracoes
 
     INT   shift, and go to state 1
     CHAR  shift, and go to state 2
@@ -209,7 +209,7 @@ State 5
 
 State 6
 
-    5 linha_decl: type . $@1 lista_id ';'
+    5 linha_decl: type • $@1 lista_id ';'
 
     $default  reduce using rule 4 ($@1)
 
@@ -218,14 +218,14 @@ State 6
 
 State 7
 
-    0 $accept: programa $end .
+    0 $accept: programa $end •
 
     $default  accept
 
 
 State 8
 
-    1 programa: declaracoes '{' . lista_cmds '}'
+    1 programa: declaracoes '{' • lista_cmds '}'
 
     ESCREVA  shift, and go to state 11
     ID       shift, and go to state 12
@@ -243,14 +243,14 @@ State 8
 
 State 9
 
-    3 declaracoes: linha_decl declaracoes .
+    3 declaracoes: linha_decl declaracoes •
 
     $default  reduce using rule 3 (declaracoes)
 
 
 State 10
 
-    5 linha_decl: type $@1 . lista_id ';'
+    5 linha_decl: type $@1 • lista_id ';'
 
     ID  shift, and go to state 22
 
@@ -259,52 +259,52 @@ State 10
 
 State 11
 
-   21 cmd_saida: ESCREVA . '(' expr ')'
+   21 cmd_saida: ESCREVA • '(' expr ')'
 
     '('  shift, and go to state 24
 
 
 State 12
 
-   22 cmd_atribuicao: ID . '=' expr
+   22 cmd_atribuicao: ID • '=' expr
 
     '='  shift, and go to state 25
 
 
 State 13
 
-   18 stmt_if: IF . '(' expr ')' '{' lista_cmds '}'
-   19        | IF . '(' expr ')' '{' lista_cmds '}' ELSE '{' lista_cmds '}'
+   18 stmt_if: IF • '(' expr ')' '{' lista_cmds '}'
+   19        | IF • '(' expr ')' '{' lista_cmds '}' ELSE '{' lista_cmds '}'
 
     '('  shift, and go to state 26
 
 
 State 14
 
-   20 stmt_while: WHILE . '(' expr ')' '{' lista_cmds '}'
+   20 stmt_while: WHILE • '(' expr ')' '{' lista_cmds '}'
 
     '('  shift, and go to state 27
 
 
 State 15
 
-    1 programa: declaracoes '{' lista_cmds . '}'
+    1 programa: declaracoes '{' lista_cmds • '}'
 
     '}'  shift, and go to state 28
 
 
 State 16
 
-   10 lista_cmds: cmd . ';'
-   12           | cmd . ';' lista_cmds
+   10 lista_cmds: cmd • ';'
+   12           | cmd • ';' lista_cmds
 
     ';'  shift, and go to state 29
 
 
 State 17
 
-   11 lista_cmds: stmt .
-   13           | stmt . lista_cmds
+   11 lista_cmds: stmt •
+   13           | stmt • lista_cmds
 
     ESCREVA  shift, and go to state 11
     ID       shift, and go to state 12
@@ -324,36 +324,36 @@ State 17
 
 State 18
 
-   16 stmt: stmt_if .
+   16 stmt: stmt_if •
 
     $default  reduce using rule 16 (stmt)
 
 
 State 19
 
-   17 stmt: stmt_while .
+   17 stmt: stmt_while •
 
     $default  reduce using rule 17 (stmt)
 
 
 State 20
 
-   14 cmd: cmd_saida .
+   14 cmd: cmd_saida •
 
     $default  reduce using rule 14 (cmd)
 
 
 State 21
 
-   15 cmd: cmd_atribuicao .
+   15 cmd: cmd_atribuicao •
 
     $default  reduce using rule 15 (cmd)
 
 
 State 22
 
-    8 lista_id: ID .
-    9         | ID . ',' lista_id
+    8 lista_id: ID •
+    9         | ID • ',' lista_id
 
     ','  shift, and go to state 31
 
@@ -362,14 +362,14 @@ State 22
 
 State 23
 
-    5 linha_decl: type $@1 lista_id . ';'
+    5 linha_decl: type $@1 lista_id • ';'
 
     ';'  shift, and go to state 32
 
 
 State 24
 
-   21 cmd_saida: ESCREVA '(' . expr ')'
+   21 cmd_saida: ESCREVA '(' • expr ')'
 
     NUM  shift, and go to state 33
     ID   shift, and go to state 34
@@ -380,7 +380,7 @@ State 24
 
 State 25
 
-   22 cmd_atribuicao: ID '=' . expr
+   22 cmd_atribuicao: ID '=' • expr
 
     NUM  shift, and go to state 33
     ID   shift, and go to state 34
@@ -391,8 +391,8 @@ State 25
 
 State 26
 
-   18 stmt_if: IF '(' . expr ')' '{' lista_cmds '}'
-   19        | IF '(' . expr ')' '{' lista_cmds '}' ELSE '{' lista_cmds '}'
+   18 stmt_if: IF '(' • expr ')' '{' lista_cmds '}'
+   19        | IF '(' • expr ')' '{' lista_cmds '}' ELSE '{' lista_cmds '}'
 
     NUM  shift, and go to state 33
     ID   shift, and go to state 34
@@ -403,7 +403,7 @@ State 26
 
 State 27
 
-   20 stmt_while: WHILE '(' . expr ')' '{' lista_cmds '}'
+   20 stmt_while: WHILE '(' • expr ')' '{' lista_cmds '}'
 
     NUM  shift, and go to state 33
     ID   shift, and go to state 34
@@ -414,15 +414,15 @@ State 27
 
 State 28
 
-    1 programa: declaracoes '{' lista_cmds '}' .
+    1 programa: declaracoes '{' lista_cmds '}' •
 
     $default  reduce using rule 1 (programa)
 
 
 State 29
 
-   10 lista_cmds: cmd ';' .
-   12           | cmd ';' . lista_cmds
+   10 lista_cmds: cmd ';' •
+   12           | cmd ';' • lista_cmds
 
     ESCREVA  shift, and go to state 11
     ID       shift, and go to state 12
@@ -442,14 +442,14 @@ State 29
 
 State 30
 
-   13 lista_cmds: stmt lista_cmds .
+   13 lista_cmds: stmt lista_cmds •
 
     $default  reduce using rule 13 (lista_cmds)
 
 
 State 31
 
-    9 lista_id: ID ',' . lista_id
+    9 lista_id: ID ',' • lista_id
 
     ID  shift, and go to state 22
 
@@ -458,29 +458,29 @@ State 31
 
 State 32
 
-    5 linha_decl: type $@1 lista_id ';' .
+    5 linha_decl: type $@1 lista_id ';' •
 
     $default  reduce using rule 5 (linha_decl)
 
 
 State 33
 
-   29 term: NUM .
+   29 term: NUM •
 
     $default  reduce using rule 29 (term)
 
 
 State 34
 
-   30 term: ID .
+   30 term: ID •
 
     $default  reduce using rule 30 (term)
 
 
 State 35
 
-   21 cmd_saida: ESCREVA '(' expr . ')'
-   24 expr: expr . binop term2
+   21 cmd_saida: ESCREVA '(' expr • ')'
+   24 expr: expr • binop term2
 
     ADD  shift, and go to state 42
     SUB  shift, and go to state 43
@@ -493,15 +493,15 @@ State 35
 
 State 36
 
-   23 expr: term .
+   23 expr: term •
 
     $default  reduce using rule 23 (expr)
 
 
 State 37
 
-   22 cmd_atribuicao: ID '=' expr .
-   24 expr: expr . binop term2
+   22 cmd_atribuicao: ID '=' expr •
+   24 expr: expr • binop term2
 
     ADD  shift, and go to state 42
     SUB  shift, and go to state 43
@@ -515,9 +515,9 @@ State 37
 
 State 38
 
-   18 stmt_if: IF '(' expr . ')' '{' lista_cmds '}'
-   19        | IF '(' expr . ')' '{' lista_cmds '}' ELSE '{' lista_cmds '}'
-   24 expr: expr . binop term2
+   18 stmt_if: IF '(' expr • ')' '{' lista_cmds '}'
+   19        | IF '(' expr • ')' '{' lista_cmds '}' ELSE '{' lista_cmds '}'
+   24 expr: expr • binop term2
 
     ADD  shift, and go to state 42
     SUB  shift, and go to state 43
@@ -530,8 +530,8 @@ State 38
 
 State 39
 
-   20 stmt_while: WHILE '(' expr . ')' '{' lista_cmds '}'
-   24 expr: expr . binop term2
+   20 stmt_while: WHILE '(' expr • ')' '{' lista_cmds '}'
+   24 expr: expr • binop term2
 
     ADD  shift, and go to state 42
     SUB  shift, and go to state 43
@@ -544,56 +544,56 @@ State 39
 
 State 40
 
-   12 lista_cmds: cmd ';' lista_cmds .
+   12 lista_cmds: cmd ';' lista_cmds •
 
     $default  reduce using rule 12 (lista_cmds)
 
 
 State 41
 
-    9 lista_id: ID ',' lista_id .
+    9 lista_id: ID ',' lista_id •
 
     $default  reduce using rule 9 (lista_id)
 
 
 State 42
 
-   25 binop: ADD .
+   25 binop: ADD •
 
     $default  reduce using rule 25 (binop)
 
 
 State 43
 
-   26 binop: SUB .
+   26 binop: SUB •
 
     $default  reduce using rule 26 (binop)
 
 
 State 44
 
-   28 binop: DIV .
+   28 binop: DIV •
 
     $default  reduce using rule 28 (binop)
 
 
 State 45
 
-   27 binop: MUL .
+   27 binop: MUL •
 
     $default  reduce using rule 27 (binop)
 
 
 State 46
 
-   21 cmd_saida: ESCREVA '(' expr ')' .
+   21 cmd_saida: ESCREVA '(' expr ')' •
 
     $default  reduce using rule 21 (cmd_saida)
 
 
 State 47
 
-   24 expr: expr binop . term2
+   24 expr: expr binop • term2
 
     NUM  shift, and go to state 50
     ID   shift, and go to state 51
@@ -603,44 +603,44 @@ State 47
 
 State 48
 
-   18 stmt_if: IF '(' expr ')' . '{' lista_cmds '}'
-   19        | IF '(' expr ')' . '{' lista_cmds '}' ELSE '{' lista_cmds '}'
+   18 stmt_if: IF '(' expr ')' • '{' lista_cmds '}'
+   19        | IF '(' expr ')' • '{' lista_cmds '}' ELSE '{' lista_cmds '}'
 
     '{'  shift, and go to state 53
 
 
 State 49
 
-   20 stmt_while: WHILE '(' expr ')' . '{' lista_cmds '}'
+   20 stmt_while: WHILE '(' expr ')' • '{' lista_cmds '}'
 
     '{'  shift, and go to state 54
 
 
 State 50
 
-   31 term2: NUM .
+   31 term2: NUM •
 
     $default  reduce using rule 31 (term2)
 
 
 State 51
 
-   32 term2: ID .
+   32 term2: ID •
 
     $default  reduce using rule 32 (term2)
 
 
 State 52
 
-   24 expr: expr binop term2 .
+   24 expr: expr binop term2 •
 
     $default  reduce using rule 24 (expr)
 
 
 State 53
 
-   18 stmt_if: IF '(' expr ')' '{' . lista_cmds '}'
-   19        | IF '(' expr ')' '{' . lista_cmds '}' ELSE '{' lista_cmds '}'
+   18 stmt_if: IF '(' expr ')' '{' • lista_cmds '}'
+   19        | IF '(' expr ')' '{' • lista_cmds '}' ELSE '{' lista_cmds '}'
 
     ESCREVA  shift, and go to state 11
     ID       shift, and go to state 12
@@ -658,7 +658,7 @@ State 53
 
 State 54
 
-   20 stmt_while: WHILE '(' expr ')' '{' . lista_cmds '}'
+   20 stmt_while: WHILE '(' expr ')' '{' • lista_cmds '}'
 
     ESCREVA  shift, and go to state 11
     ID       shift, and go to state 12
@@ -676,23 +676,23 @@ State 54
 
 State 55
 
-   18 stmt_if: IF '(' expr ')' '{' lista_cmds . '}'
-   19        | IF '(' expr ')' '{' lista_cmds . '}' ELSE '{' lista_cmds '}'
+   18 stmt_if: IF '(' expr ')' '{' lista_cmds • '}'
+   19        | IF '(' expr ')' '{' lista_cmds • '}' ELSE '{' lista_cmds '}'
 
     '}'  shift, and go to state 57
 
 
 State 56
 
-   20 stmt_while: WHILE '(' expr ')' '{' lista_cmds . '}'
+   20 stmt_while: WHILE '(' expr ')' '{' lista_cmds • '}'
 
     '}'  shift, and go to state 58
 
 
 State 57
 
-   18 stmt_if: IF '(' expr ')' '{' lista_cmds '}' .
-   19        | IF '(' expr ')' '{' lista_cmds '}' . ELSE '{' lista_cmds '}'
+   18 stmt_if: IF '(' expr ')' '{' lista_cmds '}' •
+   19        | IF '(' expr ')' '{' lista_cmds '}' • ELSE '{' lista_cmds '}'
 
     ELSE  shift, and go to state 59
 
@@ -701,21 +701,21 @@ State 57
 
 State 58
 
-   20 stmt_while: WHILE '(' expr ')' '{' lista_cmds '}' .
+   20 stmt_while: WHILE '(' expr ')' '{' lista_cmds '}' •
 
     $default  reduce using rule 20 (stmt_while)
 
 
 State 59
 
-   19 stmt_if: IF '(' expr ')' '{' lista_cmds '}' ELSE . '{' lista_cmds '}'
+   19 stmt_if: IF '(' expr ')' '{' lista_cmds '}' ELSE • '{' lista_cmds '}'
 
     '{'  shift, and go to state 60
 
 
 State 60
 
-   19 stmt_if: IF '(' expr ')' '{' lista_cmds '}' ELSE '{' . lista_cmds '}'
+   19 stmt_if: IF '(' expr ')' '{' lista_cmds '}' ELSE '{' • lista_cmds '}'
 
     ESCREVA  shift, and go to state 11
     ID       shift, and go to state 12
@@ -733,13 +733,13 @@ State 60
 
 State 61
 
-   19 stmt_if: IF '(' expr ')' '{' lista_cmds '}' ELSE '{' lista_cmds . '}'
+   19 stmt_if: IF '(' expr ')' '{' lista_cmds '}' ELSE '{' lista_cmds • '}'
 
     '}'  shift, and go to state 62
 
 
 State 62
 
-   19 stmt_if: IF '(' expr ')' '{' lista_cmds '}' ELSE '{' lista_cmds '}' .
+   19 stmt_if: IF '(' expr ')' '{' lista_cmds '}' ELSE '{' lista_cmds '}' •
 
     $default  reduce using rule 19 (stmt_if)
