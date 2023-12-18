@@ -48,6 +48,8 @@
 	int val_info = 1;
 	static struct astNode* astRoot;
 
+	char* concatNum(char *src, int num);
+
 %}
 
 // ------------------------------------------------ TIPOS e PRIORIDADE ------------------------------------------------
@@ -80,7 +82,6 @@
 
 // ------------------------------------------------ SINTATICO------------------------------------------------
 
-// TODO declaracoes no .data
 programa: declaracoes '{' lista_cmds '}'
 	{
 		printf("\nok programa\n");
@@ -103,8 +104,8 @@ programa: declaracoes '{' lista_cmds '}'
 
 		if(erroSemantico == 0)
 		{
-			astNode* dec = appendNodes(createAstNode(AST_LABEL,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".data"), $1);
-			astNode* cmds = appendNodes(createAstNode(AST_LABEL,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".text"), $3);
+			astNode* dec = appendNodes(createAstNode(AST_SECTION,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".data"), $1);
+			astNode* cmds = appendNodes(createAstNode(AST_SECTION,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".text"), $3);
 			astRoot = appendNodes(dec,cmds);
 		}
 		else
@@ -117,11 +118,11 @@ programa: declaracoes '{' lista_cmds '}'
 ;
 
 
-declaracoes: linha_decl declaracoes	{$$ = appendNodes($1, $2); printf("la");}  
-		|    linha_decl				{$$ = $1; printf("aq");}
+declaracoes: linha_decl declaracoes	{$$ = appendNodes($1, $2);}  
+		|    linha_decl				{$$ = $1;}
 ;
 
-linha_decl: type {type_info = $1;} lista_id ';'	{ $$ = $3; printf("%d/n", $3->type);}
+linha_decl: type {type_info = $1;} lista_id ';'	{ $$ = $3;}
 ;
 
 type: 	INT		{$$ = "type_int"; }
@@ -133,7 +134,6 @@ lista_id: ID ',' lista_id
 		if(constaTabSimb($1))
 		{
 			erroSemantico = 2;
-			printf("\nSímbolos na tabel already");
 		}
 
 		colocaSimb($1,type_info,"variavel","nao",proxLocMemVar++);
@@ -145,7 +145,6 @@ lista_id: ID ',' lista_id
 		if(constaTabSimb($1))
 		{
 			erroSemantico = 2;
-			printf("\nSímbolo na tabel already");
 		}
 		colocaSimb($1,type_info,"variavel","nao",proxLocMemVar++);
 		$$ = createAstNode(AST_DATA,(union ARG) 0, (union ARG) 0, (union ARG) 0, $1);
@@ -154,9 +153,9 @@ lista_id: ID ',' lista_id
 	
 ;
 
-lista_cmds:	cmd ';'					{$$ = $1; printf("\nfoi aq");}
+lista_cmds:	cmd ';'					{$$ = $1; }
 			| stmt					{$$ = $1;}
-			| cmd ';' lista_cmds	{$$ = appendNodes($1, $3); printf("\nSn aq");}
+			| cmd ';' lista_cmds	{$$ = appendNodes($1, $3);}
 			| stmt  lista_cmds 		{$$ = appendNodes($1, $2);}
 ;		
 cmd:	 cmd_saida			{$$ = $1 ;}
@@ -168,35 +167,26 @@ stmt: 	stmt_if 		{$$ = $1;}
 		// | stmt_for 		{$$ = $1;}
 ;
 
-
 stmt_if:  	IF '(' expr ')' '{' lista_cmds'}'   %prec THEN
 	{
-		    char result[50];
-			sprintf(result, "%d", labelIf);
-			printf("\nif");
-
 		$$ = 
 		appendNodes($3 , 
-			appendNodes(createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) strcat("IF#", result), ""), 
-				appendNodes($6, createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0, strcat("IF#", result)))));
+			appendNodes(createAstNode(AST_JEQ, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("IFEND#", labelIf), ""), 
+				appendNodes($6, createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,concatNum("ENDIF#", labelIf)))));
 		labelIf++;
 		
-	} 
+	}
 	|   IF '(' expr ')' '{' lista_cmds '}' ELSE '{'lista_cmds '}' 
 	{
-		char result[50];
-		sprintf(result, "%d", labelIf);
-
-		printf("\nifelse");
 		astNode* nodeLeft = 
 		appendNodes($3 , 
-			appendNodes(createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) strcat("ELSE#", result), ""), 
+			appendNodes(createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("ELSE#",labelIf), ""), 
 					appendNodes($6,
-						appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0, ""), createAstNode(AST_JEQ, (union ARG) 0, (union ARG) 0, (union ARG) 0, strcat("ENDIF#", result))))));
+						 createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("ENDIF#", labelIf), ""))));
 
 		astNode* nodeRight = 
-		appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0, strcat("ELSE#", result)),
-			appendNodes($3, createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0, strcat("ENDIF#", result))));
+		appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0, concatNum("ELSE#",labelIf)),
+			appendNodes($10, createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0, concatNum("ENDIF#",labelIf))));
 
 		
 		$$ = appendNodes(nodeLeft, nodeRight);
@@ -206,17 +196,13 @@ stmt_if:  	IF '(' expr ')' '{' lista_cmds'}'   %prec THEN
 
 stmt_while: WHILE '(' expr ')' '{' lista_cmds'}'  
 	{
-		// char result[50];
-		char result = '1';
-		printf("\nwhile");
-		// sprintf(result, "%d", labelIf);
 		$$ = 
-		appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) "WHILE#", ""),
-			appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  "WHILEB#:") ,
+		appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("WHILE#", labelWhile), ""),
+			appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("WHILEB#", labelWhile)) ,
 				appendNodes($6,
 					appendNodes($3, 
-						appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  "WHILE:"), 
-							createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) "WHILEB#", ""))))));
+						appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("WHILE#", labelWhile)), 
+							createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("WHILEB#", labelWhile), ""))))));
 		labelWhile++;
 	}
 ;
@@ -275,9 +261,8 @@ stmt_while: WHILE '(' expr ')' '{' lista_cmds'}'
 // ;
 
 cmd_saida:	ESCREVA '(' expr ')'
-	{
-		printf("\nescrvea");
-		$$ = createAstNode(AST_OUT, (union ARG) RS, (union ARG) 0, (union ARG) 0, "");
+	{ 
+		$$ = appendNodes($3, createAstNode(AST_OUT, (union ARG) RS, (union ARG) 0, (union ARG) 0, ""));
 	}
 ;
 
@@ -286,27 +271,22 @@ cmd_atribuicao: ID '=' expr
 		
 		if (!constaTabSimb($1)) 
 		{
-			printf("\natribui n cosnta");
 		  	erroSemantico = 1;
 		  	$$ = appendNodes($3, createAstNode(AST_ERROR, (union ARG) 0, (union ARG) 0, (union ARG) 0, ""));
 		} else
 		{
 			// push st
 			locMemId = recuperaLocMemId($1);
-			// emitRM("ST",ac,locMemId,gp,"atribuicao: armazena valor");
-			printf("\natribui cosnta");
 			$$ = appendNodes($3, createAstNode(AST_ST, (union ARG) RS, (union ARG) 0, (union ARG) locMemId, ""));
-			printf("\n%d", $3->type);
 		}
 		
 	}
 ;
 
 
-expr:	term 		{$$ = $1;}
+expr:	term 		{ $$ = $1; }
 	| 	expr binop term2 
 	{
-		printf("\nexpr");
         switch($2){
 			case 1:
 				$$ = appendNodes($1, 
@@ -374,11 +354,9 @@ binop: 	ADD 	{$$ = 1;}
 term:	NUM
 	{
 		$$ = createAstNode(AST_ADDI, (union ARG) RS, (union ARG) ZERO,(union ARG)$1, "");
-		 printf("------------------------------------------------term1");
 	}
 	|	ID
 	{
-		 printf("------------------------------------------------term2");
 		if (!constaTabSimb($1)) 
 		{
 		  erroSemantico = 1;
@@ -392,12 +370,10 @@ term:	NUM
 	
 term2:	NUM
 	{
-		 printf("------------------------------------------------term3");
 		$$ = createAstNode(AST_ADDI, (union ARG) AC, (union ARG) ZERO, (union ARG) $1, "");
 	}
 	|	ID
 	{
-		 printf("------------------------------------------------term4");
 		if (!constaTabSimb($1)) 
 		{
 		  erroSemantico = 1;
@@ -483,6 +459,20 @@ int recuperaLocMemId(char *nomeSimb) {
 	  if (strcmp(ptr->nome,nomeSimb)==0) return ptr->locMem;
 	return -1;
 }
+
+char* concatNum(char *src, int num) {
+	int length = strlen(src) + snprintf(NULL, 0, "%d", num) + 1;
+ 	char *result = malloc(length);
+
+    if (result == NULL) {
+        return NULL;  
+	}
+
+    sprintf(result, "%s%d", src, num);
+
+    return result;
+}
+
 // printar estrutura da tabela de simbulos
 void imprimeTabSimb(regTabSimb *tabSimb) {
   regTabSimb *ptr;
@@ -501,13 +491,10 @@ static int chups = 0;
 
 void generateCode(FILE* file, astNode* node)
 {
-	printf("chups: %d\n", chups++);
 	if(node == NULL)
 	{
-		printf("tchau: %d\n", chups++);
 		return;
 	}
-	printf("tipo: %d\n", node->type);
 	if(node->left != NULL)
 	{
 		generateCode(file, node->left);
@@ -526,8 +513,8 @@ int main(argc, argv) int argc; char **argv;
 	int ra, rd, rs, r, rz;
 
 
-//	extern int yydebug;
-	yydebug=1;
+	// extern int yydebug;
+	// yydebug=1;
 
 	erroSemantico=0;
 

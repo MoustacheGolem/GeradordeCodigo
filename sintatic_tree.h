@@ -4,6 +4,7 @@
 
 enum AST_TYPE
 {
+    AST_SECTION,
     AST_DATA,
     AST_ADD,
     AST_ADDI,
@@ -104,6 +105,9 @@ void writeCode(FILE* file, struct astNode* node)
 
     switch(node->type)
     {
+        case AST_SECTION:
+            fprintf(file,"%s\n", node->label);
+        break;
         case AST_DATA:
             fprintf(file,"%s: .word 0\n", node->label);
         break;
@@ -125,9 +129,13 @@ void writeCode(FILE* file, struct astNode* node)
         // case AST_IN:
         //     // fprintf(file," %d,%d(%d) ",op,r,d,s);
         // break;
-        // case AST_OUT:
-        //     // fprintf(file," %d,%d(%d) ",op,r,d,s);
-        // break;
+        case AST_OUT:
+            fprintf(file,"la  a1, %s\n", getRegister(node->arg1));
+            fprintf(file,"li a2, 4\n");
+            fprintf(file,"li a0, 1 \n");
+            fprintf(file,"li a7, 64\n");
+            fprintf(file,"ecall\n");
+        break;
         case AST_LD:
             fprintf(file,"ld  %s,%d(%d) \n",getRegister(node->arg1),node->arg2.imediate,node->arg3.imediate);
         break;
@@ -138,10 +146,10 @@ void writeCode(FILE* file, struct astNode* node)
             fprintf(file,"blt  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
         break;
         case AST_JLE:
-            fprintf(file,"jle  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+            fprintf(file,"ble  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
         break;
         case AST_JGT:
-            fprintf(file,"jgt  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+            fprintf(file,"bgt %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
         break;
         case AST_JGE:
             fprintf(file,"bge  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
@@ -153,7 +161,7 @@ void writeCode(FILE* file, struct astNode* node)
             fprintf(file,"bne  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
         break; 
         case AST_LABEL:
-            fprintf(file,"%s \n" , node->label);
+            fprintf(file,"%s: \n" , node->label);
         break;
         default:
         break;

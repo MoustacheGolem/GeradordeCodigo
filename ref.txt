@@ -1,4 +1,4 @@
-var a : inteiro; {escreva(1);}  programa germana, n funciona aqui claro
+var a : inteiro; {escreva(1);}  
 //vercao modificada
 int a; {escreva(1);} 
 
