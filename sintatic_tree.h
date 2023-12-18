@@ -68,8 +68,8 @@ struct astNode* createAstNode(enum AST_TYPE type, union ARG arg1, union ARG arg2
 struct astNode* appendNodes(struct astNode* left, struct astNode* right)
 {   
     //create node with args = 0
-    struct astNode* nodeAppend = createAstNode(AST_APPEND, (union ARG)0, (union ARG)0, (union ARG)0, NULL);
-	nodeAppend->left =  left;
+    struct astNode* nodeAppend = createAstNode(AST_APPEND, (union ARG)0, (union ARG)0, (union ARG)0, "");
+	nodeAppend->left = left;
 	nodeAppend->right = right;
     return nodeAppend;
 }
@@ -97,56 +97,71 @@ char* getRegister(union ARG arg)
 
 void writeCode(FILE* file, struct astNode* node)
 {
+    printf(" a-a ");
+    if(node == NULL)
+    {
+        printf("deu ruim");
+        return;
+    }
+
+    if(node->label == NULL)
+    {
+        printf("deu ruim1");
+        return;
+    }
+
+    printf(" - ");
+
     switch(node->type)
     {
         case AST_DATA:
             fprintf(file,"%s: .word 0",cont++, node->label);
         break;
-        case AST_ADD:
-            fprintf(file,"%3d:  add  %s,%s, %s ",cont++, getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
-        break;
-        case AST_ADDI:
-            fprintf(file,"%3d:  addi %s,%s, %s ",cont++, getRegister(node->arg1),getRegister(node->arg2),node->arg3.imediate);
-        break;
-        case AST_SUB:
-            fprintf(file,"%3d:  sub  %s,%s, %s ",cont++,getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
-        break; 
-        case AST_MUL:
-            fprintf(file,"%3d:  mul  %s,%s ,%s ",cont++,getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
-        break;
-        case AST_DIV:
-            fprintf(file,"%3d:  div  %s,%s, %s ",cont++,getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
-        break;
+        // case AST_ADD:
+        //     fprintf(file,"%3d:  add  %s,%s, %s ",cont++, getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
+        // break;
+        // case AST_ADDI:
+        //     fprintf(file,"%3d:  addi %s,%s, %s ",cont++, getRegister(node->arg1),getRegister(node->arg2),node->arg3.imediate);
+        // break;
+        // case AST_SUB:
+        //     fprintf(file,"%3d:  sub  %s,%s, %s ",cont++,getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
+        // break; 
+        // case AST_MUL:
+        //     fprintf(file,"%3d:  mul  %s,%s ,%s ",cont++,getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
+        // break;
+        // case AST_DIV:
+        //     fprintf(file,"%3d:  div  %s,%s, %s ",cont++,getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
+        // break;
         // case AST_IN:
         //     fprintf(file,"%3d:  %d,%d(%d) ",cont++,op,r,d,s);
         // break;
         // case AST_OUT:
         //     fprintf(file,"%3d:  %d,%d(%d) ",cont++,op,r,d,s);
         // break;
-        case AST_LD:
-            fprintf(file,"%3d: ld:  %s,%d(%d) ",cont++,getRegister(node->arg1),node->arg2.imediate,node->arg3.imediate);
-        break;
-        case AST_ST:
-            fprintf(file,"%3d: st:  %s,%d(%d) ",cont++,getRegister(node->arg1),node->arg2.imediate,node->arg3.imediate);
-        break;
-        case AST_JLT:
-            fprintf(file,"%3d: blt:  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
-        break;
-        case AST_JLE:
-            fprintf(file,"%3d: jle:  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
-        break;
-        case AST_JGT:
-            fprintf(file,"%3d: jgt:  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
-        break;
-        case AST_JGE:
-            fprintf(file,"%3d: bge:  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
-        break;
-        case AST_JEQ:
-            fprintf(file,"%3d: beq  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
-        break;
-        case AST_JNE:
-            fprintf(file,"%3d: bne:  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
-        break; 
+        // case AST_LD:
+        //     fprintf(file,"%3d: ld:  %s,%d(%d) ",cont++,getRegister(node->arg1),node->arg2.imediate,node->arg3.imediate);
+        // break;
+        // case AST_ST:
+        //     fprintf(file,"%3d: st:  %s,%d(%d) ",cont++,getRegister(node->arg1),node->arg2.imediate,node->arg3.imediate);
+        // break;
+        // case AST_JLT:
+        //     fprintf(file,"%3d: blt:  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+        // break;
+        // case AST_JLE:
+        //     fprintf(file,"%3d: jle:  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+        // break;
+        // case AST_JGT:
+        //     fprintf(file,"%3d: jgt:  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+        // break;
+        // case AST_JGE:
+        //     fprintf(file,"%3d: bge:  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+        // break;
+        // case AST_JEQ:
+        //     fprintf(file,"%3d: beq  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+        // break;
+        // case AST_JNE:
+        //     fprintf(file,"%3d: bne:  %s,%s, %d ",cont++,getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+        // break; 
         case AST_LABEL:
             fprintf(file,"%s" , node->label);
         break;

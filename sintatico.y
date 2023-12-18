@@ -104,9 +104,8 @@ programa: declaracoes '{' lista_cmds '}'
 		if(erroSemantico == 0)
 		{
 			astNode* dec = appendNodes(createAstNode(AST_LABEL,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".data"), $1);
-			astNode* cmds = appendNodes(createAstNode(AST_LABEL,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".text"), $3);
-			// astRoot = appendNodes(dec, cmds);
-			astRoot = createAstNode(AST_DATA,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".data");
+			// astNode* cmds = appendNodes(createAstNode(AST_LABEL,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".text"), $3);
+			astRoot = dec;
 		}
 		else
 		{
@@ -118,18 +117,29 @@ programa: declaracoes '{' lista_cmds '}'
 ;
 
 
-declaracoes: linha_decl				{$$ = $1;}
-		| linha_decl declaracoes 	{$$ = appendNodes($1, $2);}
+declaracoes: linha_decl declaracoes	{$$ = appendNodes($1, $2); printf("la");}  
+		|    linha_decl				{$$ = $1; printf("aq");}
 ;
 
-linha_decl: type {type_info = $1;} lista_id ';'	{ $$ = $3;}
+linha_decl: type {type_info = $1;} lista_id ';'	{ $$ = $3; printf("%d/n", $3->type);}
 ;
 
 type: 	INT		{$$ = "type_int"; }
 		|CHAR	{$$ = "type_char";}
 ;
 
-lista_id: ID
+lista_id: ID ',' lista_id
+	{
+		if(constaTabSimb($1))
+		{
+			erroSemantico = 2;
+			printf("\nSímbolos na tabel already");
+		}
+
+		colocaSimb($1,type_info,"variavel","nao",proxLocMemVar++);
+		$$ = appendNodes(createAstNode(AST_DATA,(union ARG) 0, (union ARG) 0, (union ARG) 0, $1), $3);
+	}
+	|  ID
 	{	
 		
 		if(constaTabSimb($1))
@@ -137,21 +147,11 @@ lista_id: ID
 			erroSemantico = 2;
 			printf("\nSímbolo na tabel already");
 		}
-
 		colocaSimb($1,type_info,"variavel","nao",proxLocMemVar++);
 		$$ = createAstNode(AST_DATA,(union ARG) 0, (union ARG) 0, (union ARG) 0, $1);
+		
 	}
-	| ID ',' lista_id
-	{
-		if(constaTabSimb($1))
-		{
-			erroSemantico = 2;
-			printf("\nSímbolos na tabel already");
-		}
-		else
-		$$ = appendNodes(createAstNode(AST_DATA,(union ARG) 0, (union ARG) 0, (union ARG) 0, $1), $3);
-		colocaSimb($1,type_info,"variavel","nao",proxLocMemVar++);
-	}
+	
 ;
 
 lista_cmds:	cmd ';'					{$$ = $1;}
@@ -484,18 +484,28 @@ void imprimeTabSimb(regTabSimb *tabSimb) {
 }
 // FIM GERA CODIGO
 
+static int chups = 0;
+
 void generateCode(FILE* file, astNode* node)
 {
+	printf("chups: %d\n", chups++);
+	if(node == NULL)
+	{
+		return;
+	}
+	printf("tipo: %d\n", node->type);
 	if(node->left != NULL)
 	{
 		generateCode(file, node->left);
 	}
+	printf("tipo1: %d\n", node->type);
 	if(node->right != NULL)
 	{
 		generateCode(file, node->right);
 	}
+	printf("tipo2: %d\n", node->type);
 	writeCode(file, node);
-	printf("%d /n", node->type);
+	printf("tipo3: %d\n", node->type);
 }
 
 
@@ -506,7 +516,7 @@ int main(argc, argv) int argc; char **argv;
 
 
 //	extern int yydebug;
-//	yydebug=1;
+	yydebug=1;
 
 	erroSemantico=0;
 
@@ -519,6 +529,7 @@ int main(argc, argv) int argc; char **argv;
 	// 	yyout = fopen(argv[1],"wt");
 	// else
 		// yyout = stdout;
+	yyin = fopen("entrada.cm","rt");
 	yyout = fopen("saida.tm","wt");
 
 	yyparse ();

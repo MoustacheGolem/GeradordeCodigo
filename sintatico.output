@@ -14,8 +14,8 @@ Grammar
 
     1 programa: declaracoes '{' lista_cmds '}'
 
-    2 declaracoes: linha_decl
-    3            | linha_decl declaracoes
+    2 declaracoes: linha_decl declaracoes
+    3            | linha_decl
 
     4 $@1: ε
 
@@ -24,8 +24,8 @@ Grammar
     6 type: INT
     7     | CHAR
 
-    8 lista_id: ID
-    9         | ID ',' lista_id
+    8 lista_id: ID ',' lista_id
+    9         | ID
 
    10 lista_cmds: cmd ';'
    11           | stmt
@@ -67,7 +67,7 @@ Terminals, with rules where they appear
     $end (0) 0
     '(' (40) 18 19 20 21
     ')' (41) 18 19 20 21
-    ',' (44) 9
+    ',' (44) 8
     ';' (59) 5 10 12
     '=' (61) 22
     '{' (123) 1 18 19 20
@@ -103,7 +103,7 @@ Nonterminals, with rules where they appear
         on right: 0
     declaracoes <node> (31)
         on left: 2 3
-        on right: 1 3
+        on right: 1 2
     linha_decl <node> (32)
         on left: 5
         on right: 2 3
@@ -115,7 +115,7 @@ Nonterminals, with rules where they appear
         on right: 5
     lista_id <node> (35)
         on left: 8 9
-        on right: 5 9
+        on right: 5 8
     lista_cmds <node> (36)
         on left: 10 11 12 13
         on right: 1 12 13 18 19 20
@@ -194,13 +194,13 @@ State 4
 
 State 5
 
-    2 declaracoes: linha_decl •
-    3            | linha_decl • declaracoes
+    2 declaracoes: linha_decl • declaracoes
+    3            | linha_decl •
 
     INT   shift, and go to state 1
     CHAR  shift, and go to state 2
 
-    $default  reduce using rule 2 (declaracoes)
+    $default  reduce using rule 3 (declaracoes)
 
     declaracoes  go to state 9
     linha_decl   go to state 5
@@ -243,9 +243,9 @@ State 8
 
 State 9
 
-    3 declaracoes: linha_decl declaracoes •
+    2 declaracoes: linha_decl declaracoes •
 
-    $default  reduce using rule 3 (declaracoes)
+    $default  reduce using rule 2 (declaracoes)
 
 
 State 10
@@ -352,12 +352,12 @@ State 21
 
 State 22
 
-    8 lista_id: ID •
-    9         | ID • ',' lista_id
+    8 lista_id: ID • ',' lista_id
+    9         | ID •
 
     ','  shift, and go to state 31
 
-    $default  reduce using rule 8 (lista_id)
+    $default  reduce using rule 9 (lista_id)
 
 
 State 23
@@ -449,7 +449,7 @@ State 30
 
 State 31
 
-    9 lista_id: ID ',' • lista_id
+    8 lista_id: ID ',' • lista_id
 
     ID  shift, and go to state 22
 
@@ -551,9 +551,9 @@ State 40
 
 State 41
 
-    9 lista_id: ID ',' lista_id •
+    8 lista_id: ID ',' lista_id •
 
-    $default  reduce using rule 9 (lista_id)
+    $default  reduce using rule 8 (lista_id)
 
 
 State 42
