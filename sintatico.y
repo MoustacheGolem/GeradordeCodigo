@@ -69,9 +69,9 @@
 %left ADD SUB UMINUS
 %left DIV MUL
 
-%type <inteiro> binop term expr term2
+%type <inteiro> binop 
 %type <cadeia> type 
-%type <node> declaracoes lista_id linha_decl lista_cmds cmd stmt cmd_saida cmd_atribuicao stmt_if stmt_while 
+%type <node> declaracoes lista_id linha_decl lista_cmds cmd stmt cmd_saida cmd_atribuicao stmt_if stmt_while term expr term2
  
 %nonassoc THEN
 %nonassoc ELSE
@@ -104,8 +104,8 @@ programa: declaracoes '{' lista_cmds '}'
 		if(erroSemantico == 0)
 		{
 			astNode* dec = appendNodes(createAstNode(AST_LABEL,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".data"), $1);
-			// astNode* cmds = appendNodes(createAstNode(AST_LABEL,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".text"), $3);
-			astRoot = dec;
+			astNode* cmds = appendNodes(createAstNode(AST_LABEL,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".text"), $3);
+			astRoot = appendNodes(dec,cmds);
 		}
 		else
 		{
@@ -154,9 +154,9 @@ lista_id: ID ',' lista_id
 	
 ;
 
-lista_cmds:	cmd ';'					{$$ = $1;}
+lista_cmds:	cmd ';'					{$$ = $1; printf("\nfoi aq");}
 			| stmt					{$$ = $1;}
-			| cmd ';' lista_cmds	{$$ = appendNodes($1, $3);}
+			| cmd ';' lista_cmds	{$$ = appendNodes($1, $3); printf("\nSn aq");}
 			| stmt  lista_cmds 		{$$ = appendNodes($1, $2);}
 ;		
 cmd:	 cmd_saida			{$$ = $1 ;}
@@ -204,16 +204,19 @@ stmt_if:  	IF '(' expr ')' '{' lista_cmds'}'   %prec THEN
 	}
 ;
 
-stmt_while: WHILE '('expr')' '{' lista_cmds'}'  
+stmt_while: WHILE '(' expr ')' '{' lista_cmds'}'  
 	{
-		char result[50];
+		// char result[50];
+		char result = '1';
 		printf("\nwhile");
-		sprintf(result, "%d", labelIf);
+		// sprintf(result, "%d", labelIf);
 		$$ = 
-		appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) 0, strcat("WHILE#", result)),
-			appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  strcat("WHILEB#", result)) ,
+		appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) "WHILE#", ""),
+			appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  "WHILEB#:") ,
 				appendNodes($6,
-					appendNodes($3, createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) strcat("WHILEB#", result), "")))));
+					appendNodes($3, 
+						appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  "WHILE:"), 
+							createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) "WHILEB#", ""))))));
 		labelWhile++;
 	}
 ;
@@ -280,9 +283,10 @@ cmd_saida:	ESCREVA '(' expr ')'
 
 cmd_atribuicao: ID '=' expr
 	{	
-		printf("\natribui");
+		
 		if (!constaTabSimb($1)) 
 		{
+			printf("\natribui n cosnta");
 		  	erroSemantico = 1;
 		  	$$ = appendNodes($3, createAstNode(AST_ERROR, (union ARG) 0, (union ARG) 0, (union ARG) 0, ""));
 		} else
@@ -290,7 +294,9 @@ cmd_atribuicao: ID '=' expr
 			// push st
 			locMemId = recuperaLocMemId($1);
 			// emitRM("ST",ac,locMemId,gp,"atribuicao: armazena valor");
+			printf("\natribui cosnta");
 			$$ = appendNodes($3, createAstNode(AST_ST, (union ARG) RS, (union ARG) 0, (union ARG) locMemId, ""));
+			printf("\n%d", $3->type);
 		}
 		
 	}
@@ -304,22 +310,26 @@ expr:	term 		{$$ = $1;}
         switch($2){
 			case 1:
 				$$ = appendNodes($1, 
-						createAstNode(AST_ADD, (union ARG) RS, (union ARG) RS, (union ARG) AC, ""));
+						appendNodes($3, 
+							createAstNode(AST_ADD, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
 			break;
 
 			case 2:
 				$$ = appendNodes($1, 
-						createAstNode(AST_SUB, (union ARG) RS, (union ARG) RS, (union ARG) AC, ""));
+						appendNodes($3, 
+							createAstNode(AST_SUB, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
 			break;
 
 			case 3:
 				$$ = appendNodes($1, 
-						createAstNode(AST_MUL, (union ARG) RS, (union ARG) RS, (union ARG) AC, ""));
+						appendNodes($3, 
+							createAstNode(AST_MUL, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
 			break;
 
 			case 4:
 				$$ = appendNodes($1, 
-						createAstNode(AST_DIV, (union ARG) RS, (union ARG) RS, (union ARG) AC, ""));
+						appendNodes($3, 
+							createAstNode(AST_DIV, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
 			break;
 
 			// case 5:
@@ -363,11 +373,12 @@ binop: 	ADD 	{$$ = 1;}
 
 term:	NUM
 	{
-		printf("\nterm");
 		$$ = createAstNode(AST_ADDI, (union ARG) RS, (union ARG) ZERO,(union ARG)$1, "");
+		 printf("------------------------------------------------term1");
 	}
 	|	ID
 	{
+		 printf("------------------------------------------------term2");
 		if (!constaTabSimb($1)) 
 		{
 		  erroSemantico = 1;
@@ -381,10 +392,12 @@ term:	NUM
 	
 term2:	NUM
 	{
+		 printf("------------------------------------------------term3");
 		$$ = createAstNode(AST_ADDI, (union ARG) AC, (union ARG) ZERO, (union ARG) $1, "");
 	}
 	|	ID
 	{
+		 printf("------------------------------------------------term4");
 		if (!constaTabSimb($1)) 
 		{
 		  erroSemantico = 1;
@@ -491,6 +504,7 @@ void generateCode(FILE* file, astNode* node)
 	printf("chups: %d\n", chups++);
 	if(node == NULL)
 	{
+		printf("tchau: %d\n", chups++);
 		return;
 	}
 	printf("tipo: %d\n", node->type);
@@ -498,14 +512,11 @@ void generateCode(FILE* file, astNode* node)
 	{
 		generateCode(file, node->left);
 	}
-	printf("tipo1: %d\n", node->type);
 	if(node->right != NULL)
 	{
 		generateCode(file, node->right);
 	}
-	printf("tipo2: %d\n", node->type);
 	writeCode(file, node);
-	printf("tipo3: %d\n", node->type);
 }
 
 

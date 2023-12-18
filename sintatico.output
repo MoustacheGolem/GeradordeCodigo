@@ -137,16 +137,16 @@ Nonterminals, with rules where they appear
     cmd_atribuicao <node> (42)
         on left: 22
         on right: 15
-    expr <inteiro> (43)
+    expr <node> (43)
         on left: 23 24
         on right: 18 19 20 21 22 24
     binop <inteiro> (44)
         on left: 25 26 27 28
         on right: 24
-    term <inteiro> (45)
+    term <node> (45)
         on left: 29 30
         on right: 23
-    term2 <inteiro> (46)
+    term2 <node> (46)
         on left: 31 32
         on right: 24
 
