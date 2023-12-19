@@ -61,19 +61,21 @@
 }
 
 %token INT CHAR
-%token INTEIRO ESCREVA
+%token INTEIRO ESCREVA ENTRADA
 %token <inteiro> NUM 
 %token <cadeia> ID 
 %token IF ELSE              
-%token WHILE FOR RETURN EXTERN VOID
-%token  ADD SUB DIV MUL
+%token WHILE FOR 
+%token ADD SUB DIV MUL
+%token AND OR LT GT LE GE EQ DIF
 
 %left ADD SUB UMINUS
 %left DIV MUL
 
-%type <inteiro> binop 
+%type <inteiro> binop logop 
 %type <cadeia> type 
-%type <node> declaracoes lista_id linha_decl lista_cmds cmd stmt cmd_saida cmd_atribuicao stmt_if stmt_while term expr term2
+%type <node> declaracoes lista_id linha_decl lista_cmds cmd stmt cmd_saida cmd_atribuicao  cmd_entrada  
+%type <node> stmt_if stmt_while stmt_for for_atr for_expr final_for term expr term2 
  
 %nonassoc THEN
 %nonassoc ELSE
@@ -102,9 +104,12 @@ programa: declaracoes '{' lista_cmds '}'
 			break;
 		}
 
+		buffer:
+
 		if(erroSemantico == 0)
 		{
-			astNode* dec = appendNodes(createAstNode(AST_SECTION,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".section .data"), $1);
+			astNode* dec = appendNodes(createAstNode(AST_SECTION,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".section .data"), 
+								appendNodes(createAstNode(AST_DATA,(union ARG) 0, (union ARG) 0, (union ARG) 0, "buffer"),$1));
 			astNode* cmds = appendNodes(createAstNode(AST_SECTION,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".section .text"), $3);
 			astRoot = appendNodes(dec,appendNodes(cmds,createAstNode(AST_HALT,(union ARG) 0, (union ARG) 0, (union ARG) 0, "")));
 		}
@@ -119,6 +124,7 @@ programa: declaracoes '{' lista_cmds '}'
 
 
 declaracoes: linha_decl declaracoes	{$$ = appendNodes($1, $2);}  
+		// |	 linha_func declaracoes
 		|    linha_decl				{$$ = $1;}
 ;
 
@@ -133,7 +139,7 @@ lista_id: ID ',' lista_id
 	{
 		if(constaTabSimb($1))
 		{
-			erroSemantico = 2;
+			erroSemantico = 2; 
 		}
 
 		colocaSimb($1,type_info,"variavel","nao",proxLocMemVar++);
@@ -153,18 +159,36 @@ lista_id: ID ',' lista_id
 	
 ;
 
+// TODO empilhar contexto
+// lista_func: func ';'
+// 			func lista_func ';'
+// ;
+
+// func: type ID '(' func_args ')' '{' lista_cmds '}'
+// ;
+
+// func_args: func_arg
+// 		 | func_arg ',' func_args 
+// ;
+
+// func_arg: type ID
+// ;
+
+
 lista_cmds:	cmd ';'					{$$ = $1; }
 			| stmt					{$$ = $1;}
 			| cmd ';' lista_cmds	{$$ = appendNodes($1, $3);}
 			| stmt  lista_cmds 		{$$ = appendNodes($1, $2);}
 ;		
 cmd:	 cmd_saida			{$$ = $1 ;}
+		| cmd_entrada		{$$ = $1 ;}
 		| cmd_atribuicao	{$$ = $1 ;}
+		
 ;
 
 stmt: 	stmt_if 		{$$ = $1;}
 		| stmt_while 	{$$ = $1;}
-		// | stmt_for 		{$$ = $1;}
+		| stmt_for 		{$$ = $1;}
 ;
 
 stmt_if:  	IF '(' expr ')' '{' lista_cmds'}'   %prec THEN
@@ -207,62 +231,56 @@ stmt_while: WHILE '(' expr ')' '{' lista_cmds'}'
 	}
 ;
 
-
-
-// stmt_for: FOR '(' cmd_atribuicao  for_expr  expr ')' '{' lista_cmds'}'  
-// 	{
-// 		astNode* rootFor = NULL
-// 		if($3 != NULL)
-// 		{
-// 			rootFor = $3
-// 		}
-
-// 		lastNode* labelFor = createAstNode(AST_LABEL, 0, 0, 0, "FOR#");
-// 		rootFor == NULL ? rootFor = labelFor : rootFor.left = labelFor;
-
-
-// 		lastNode* nodeExpr = createAstNode(AST_LABEL, 0, 0, 0, "FOR#");
-// 		else if($4 != NULL)
-// 		{
-// 			rootFor.left == NULL ? rootFor.left = $4 : rootFor.right = nodeExpr.left = 4;
-// 		}	
-
-// 		root createAstNode(AST_JE, 0, 0, 0, "");
-
-// 		else if($5 != NULL)
-// 		{
-
-// 		}
-// 		createAstNode(AST_JE, 0, 0, 0, "");
-// 		createAstNode(AST_LABEL, 0, 0, 0, "FINALFOR#");
-
-// 	}
+stmt_for: FOR '(' for_atr  for_expr  final_for  '{' lista_cmds'}'  
+	{
+		$$ = appendNodes($3, 
+				appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("FOR#", labelFor)),
+					appendNodes($4,
+						appendNodes(createAstNode(AST_JLE, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("ENDFOR#", labelFor), ""),
+							appendNodes($7,
+								appendNodes($5,
+									appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("FOR#", labelFor), ""), 
+										createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("ENDFOR#", labelFor)))))))));
+	}
 ;
 
-// for_atr:  term  
-// 		| ';' { $$ = NULL; } 
-// 		| cmd_atribuicao ';'
+for_atr:  ';' 
+	{ $$ = createAstNode(AST_NONE, (union ARG) ZERO, (union ARG) ZERO, (union ARG) "", ""); }
+		| term  ';'
 	
-// 	{	
-// 		if (!constaTabSimb($1)) 
-// 		{
-// 		  	erroSemantico = 1;
-// 		} else{
-// 			locMemId = recuperaLocMemId($1);
-// 			emitRM("ST",ac,locMemId,gp,"atribuicao: armazena valor");
-// 			$$ = createAstNode(AST_MUL, 0, 0, 0, "");
-// 		}
-// 	}
-// ;
+	{ $$ = $1; }
+		| cmd_atribuicao ';'
+	{ $$ = $1; }  
+;
 		
-// // TODO ADD index for label
-// for_expr: expr ';' 	{ $$ = createAstNode(AST_NONE, 0, 0, 0, ""); }
-// 		| ';' 		{ $$ = NULL; }
-// ;
+for_expr:  ';' 			{ $$ = createAstNode(AST_NONE, (union ARG) ZERO, (union ARG) ZERO, (union ARG) "", ""); }
+		| 	expr ';' 	{ $$ = $1 ;}
+		
+;
+
+final_for:  ')'  { $$ = createAstNode(AST_NONE, (union ARG) ZERO, (union ARG) ZERO, (union ARG) "", "") ;}
+			|  cmd_atribuicao ')' { $$ = $1 ;}
+;
 
 cmd_saida:	ESCREVA '(' expr ')'
 	{ 
 		$$ = appendNodes($3, createAstNode(AST_OUT, (union ARG) RS, (union ARG) 0, (union ARG) 0, ""));
+	}
+;
+
+cmd_entrada:	ENTRADA '('	ID ')'
+	{ 
+		
+		if (!constaTabSimb($3)) 
+		{
+		  	erroSemantico = 1;
+		  	$$ = appendNodes($3, createAstNode(AST_ERROR, (union ARG) 0, (union ARG) 0, (union ARG) 0, ""));
+		} else
+		{
+			locMemId = recuperaLocMemId($3);
+			$$ = appendNodes(createAstNode(AST_IN, (union ARG) RS, (union ARG) 0, (union ARG) 0, ""), 
+					createAstNode(AST_LD, (union ARG) RS, (union ARG) 0, (union ARG) AC, $3));
+		}
 	}
 ;
 
@@ -275,9 +293,8 @@ cmd_atribuicao: ID '=' expr
 		  	$$ = appendNodes($3, createAstNode(AST_ERROR, (union ARG) 0, (union ARG) 0, (union ARG) 0, ""));
 		} else
 		{
-			// push st
 			locMemId = recuperaLocMemId($1);
-			$$ = appendNodes($3, createAstNode(AST_ST, (union ARG) RS, (union ARG) 0, (union ARG) locMemId, ""));
+			$$ = appendNodes($3, createAstNode(AST_ST, (union ARG) RS, (union ARG) 0, (union ARG) AC, $1));
 		}
 		
 	}
@@ -313,12 +330,75 @@ expr:	term 		{ $$ = $1; }
 			break;
 		}
 	}
+
+	| 	expr logop term2 
+	{
+        switch($2){
+			case 1:
+				$$ = appendNodes($1, 
+						appendNodes($3, 
+							createAstNode(AST_GE, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
+			break;
+
+			case 2:
+				$$ = appendNodes($1, 
+						appendNodes($3, 
+							createAstNode(AST_LE, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
+			break;
+
+			case 3:
+				$$ = appendNodes($1, 
+						appendNodes($3, 
+							createAstNode(AST_GT, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
+			break;
+
+			case 4:
+				$$ = appendNodes($1, 
+						appendNodes($3, 
+							createAstNode(AST_LT, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
+			break;
+
+			case 5:
+				$$ = appendNodes($1, 
+						appendNodes($3, 
+							createAstNode(AST_EQ, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
+			break;
+
+			case 6:
+				$$ = appendNodes($1, 
+						appendNodes($3, 
+							createAstNode(AST_DIF, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
+			break;
+
+			case 7:
+				$$ = appendNodes($1, 
+						appendNodes($3, 
+							createAstNode(AST_AND, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
+			break;
+
+			case 8:
+				$$ = appendNodes($1, 
+						appendNodes($3, 
+							createAstNode(AST_OR, (union ARG) RS, (union ARG) RS, (union ARG) AC, "")));
+			break;
+		}
+	}
 ;
 
 binop: 	ADD 	{$$ = 1;}
 		|SUB 	{$$ = 2;}
 		|MUL 	{$$ = 3;}
-		|DIV 	{$$ = 4;}		
+		|DIV 	{$$ = 4;}	
+;
+
+logop: 	GE 		{$$ = 1;}		
+		|LE 	{$$ = 2;}		
+		|GT 	{$$ = 3;}		
+		|LT 	{$$ = 4;}		
+		|EQ 	{$$ = 5;}		
+		|DIF 	{$$ = 6;}		
+		|AND 	{$$ = 7;}		
+		|OR 	{$$ = 8;}	
 ;
 
 term:	NUM
@@ -333,7 +413,7 @@ term:	NUM
 		  $$ = createAstNode(AST_ERROR,(union ARG) 0, (union ARG) 0, (union ARG) 0, "");
 		} else {
 		  locMemId = recuperaLocMemId($1);
-		  $$ = createAstNode(AST_LD, (union ARG) RS, (union ARG)0, (union ARG) locMemId, "");
+		  $$ = createAstNode(AST_LD, (union ARG) RS, (union ARG)0, (union ARG) AC, $1);
 		}
 	}	
 ;	
@@ -350,27 +430,17 @@ term2:	NUM
 		  $$ = createAstNode(AST_ERROR,(union ARG) 0, (union ARG) 0, (union ARG) 0, "");
 		} else {
 		  locMemId = recuperaLocMemId($1);
-		   $$ = appendNodes(createAstNode(AST_LD, (union ARG) AU, (union ARG)0, (union ARG)locMemId, "")  ,createAstNode(AST_ADD, (union ARG) AC, (union ARG) ZERO, (union ARG) AU, "")) ;
+		   $$ = appendNodes(createAstNode(AST_LD, (union ARG) AU, (union ARG)0, (union ARG)0, "")  ,createAstNode(AST_ADD, (union ARG) AC, (union ARG) ZERO, (union ARG) AU, "")) ;
 		}
 	}
-;
-
-// func: type ID'(' declaracoes ')' '{' lista_cmds '}'
-	// {
-		// push label na lsita de comandos
-		// push dos registradores store em todos
-		// push na lsita de comandos
-		// push loads
-		// remove na tabela de simbolos
-	// }
 ;
 
 %%
 
 
-
 // ------------------------------------------------ SEMANTICO ------------------------------------------------
 
+// TODO se for fazer função fazer removeSimb = código para remvoer node de lista de encadeada
 
 regTabSimb *colocaSimb(char *nomeSimb, char *tipoSimb, char *naturezaSimb, char *usadoSimb,int loc){
 	regTabSimb *ptr;
@@ -391,30 +461,14 @@ regTabSimb *colocaSimb(char *nomeSimb, char *tipoSimb, char *naturezaSimb, char 
 	tabSimb= ptr;
 	return ptr;
 }
+
 int constaTabSimb(char *nomeSimb) {
 	regTabSimb *ptr;
 	for (ptr=tabSimb; ptr!=(regTabSimb *)0; ptr=(regTabSimb *)ptr->prox)
 	  if (strcmp(ptr->nome,nomeSimb)==0) return 1;
 	return 0;
 }
-// FIM SEMANTICO
 
-// GERA CODIGO
-void emitRO( char *op, int r, int s, int t, char *c)
-{ fprintf(yyout,"%3d:  %5s  %d,%d,%d ",emitLoc++,op,r,s,t);
-//  if (TraceCode) fprintf(code,"\t%s",c) ;
-  fprintf(yyout,"\n") ;
-//  if (highEmitLoc < emitLoc) highEmitLoc = emitLoc ;
-} /* emitRO */
-
-void emitRM( char * op, int r, int d, int s, char *c)
-{ fprintf(yyout,"%3d:  %5s  %d,%d(%d) ",emitLoc++,op,r,d,s);
-//  if (TraceCode) fprintf(code,"\t%s",c) ;
-  fprintf(yyout,"\n") ;
-//  if (highEmitLoc < emitLoc)  highEmitLoc = emitLoc ;
-} /* emitRM */
-
-// recupera locacao de memoria de um id cujo nome eh passado em parametro
 int recuperaLocMemId(char *nomeSimb) {
 	regTabSimb *ptr;
 	for (ptr=tabSimb; ptr!=(regTabSimb *)0; ptr=(regTabSimb *)ptr->prox)
@@ -449,7 +503,6 @@ void imprimeTabSimb(regTabSimb *tabSimb) {
 }
 // FIM GERA CODIGO
 
-static int chups = 0;
 
 void generateCode(FILE* file, astNode* node)
 {
@@ -472,7 +525,7 @@ void generateCode(FILE* file, astNode* node)
 
 int main(argc, argv) int argc; char **argv;
 	{
-	// yydebug=1;
+	yydebug=1;
 
 	erroSemantico=0;
 
@@ -492,5 +545,5 @@ int main(argc, argv) int argc; char **argv;
 yyerror (s) /* Called by yyparse on error */
 	char *s;
 {
-	printf ("Problema com a analise sintatica!\n", s);
+	printf ("Problema com a analise sintatica: %s!\n", s);
 }

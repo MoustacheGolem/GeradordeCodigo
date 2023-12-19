@@ -11,6 +11,14 @@ enum AST_TYPE
     AST_SUB, 
     AST_MUL,
     AST_DIV,
+    AST_AND, 
+    AST_OR, 
+    AST_LT, 
+    AST_GT, 
+    AST_LE, 
+    AST_GE, 
+    AST_EQ, 
+    AST_DIF, 
     AST_IN,
     AST_OUT,
     AST_LD,
@@ -127,9 +135,39 @@ void writeCode(FILE* file, struct astNode* node)
         case AST_DIV:
             fprintf(file,"div  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
         break;
-        // case AST_IN:
-        //     // fprintf(file," %d,%d(%d) ",op,r,d,s);
-        // break;
+        case AST_AND:
+            fprintf(file,"and  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
+        break;
+        case AST_OR:
+            fprintf(file,"or  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
+        break;
+        case AST_LT:
+            fprintf(file,"slt  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
+        break;
+        case AST_GT:
+            fprintf(file,"slt  %s,%s, %s \n",getRegister(node->arg2),getRegister(node->arg1),getRegister(node->arg3));
+        break;
+        case AST_LE:
+            fprintf(file,"slt  %s,%s, %s \n",getRegister(node->arg2),getRegister(node->arg1),getRegister(node->arg3));
+            fprintf(file,"xori  %s,%s, %d \n",getRegister(node->arg1),getRegister(node->arg1),1);
+            break;
+        case AST_GE:
+            fprintf(file,"slt  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
+            fprintf(file,"xori  %s,%s, %d \n",getRegister(node->arg1),getRegister(node->arg1),1);
+        break;
+        case AST_EQ:
+            fprintf(file,"seq  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
+        break;
+        case AST_DIF:
+            fprintf(file,"sne  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
+        break;
+        case AST_IN:
+            fprintf(file,"la a0, 0\n");
+            fprintf(file,"li a1, bugger\n");
+            fprintf(file,"li a2, 4 \n");
+            fprintf(file,"li a7, 63\n");
+            fprintf(file,"ecall\n");
+        break;
         case AST_OUT:
             fprintf(file,"la  a1, %s\n", getRegister(node->arg1));
             fprintf(file,"li a2, 4\n");
@@ -138,34 +176,36 @@ void writeCode(FILE* file, struct astNode* node)
             fprintf(file,"ecall\n");
         break;
         case AST_LD:
-            fprintf(file,"ld  %s,%d(%d) \n",getRegister(node->arg1),node->arg2.imediate,node->arg3.imediate);
+            fprintf(file,"la  %s, %s\n",getRegister(node->arg3), node->label );
+            fprintf(file,"lw  %s, %d(%s) \n",getRegister(node->arg1),node->arg2.imediate,getRegister(node->arg3));
         break;
         case AST_ST:
-            fprintf(file,"st  %s,%d(%d) \n",getRegister(node->arg1),node->arg2.imediate,node->arg3.imediate);
+            fprintf(file,"la  %s, %s\n",getRegister(node->arg3), node->label);
+            fprintf(file,"sw  %s, %d(%s) \n",getRegister(node->arg1),node->arg2.imediate,getRegister(node->arg3));
         break;
         case AST_JLT:
-            fprintf(file,"blt  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+            fprintf(file,"blt  %s, %s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
         break;
         case AST_JLE:
-            fprintf(file,"ble  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+            fprintf(file,"ble  %s, %s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
         break;
         case AST_JGT:
-            fprintf(file,"bgt %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+            fprintf(file,"bgt %s, %s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
         break;
         case AST_JGE:
-            fprintf(file,"bge  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+            fprintf(file,"bge  %s, %s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
         break;
         case AST_JEQ:
-            fprintf(file,"beq  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+            fprintf(file,"beq  %s, %s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
         break;
         case AST_JNE:
-            fprintf(file,"bne  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
+            fprintf(file,"bne  %s, %s, %s \n",getRegister(node->arg1),getRegister(node->arg2),node->arg3.label);
         break; 
         case AST_LABEL:
             fprintf(file,"%s: \n" , node->label);
         break;
         case AST_HALT:
-            fprintf(file,"li  a7, 93, %s\n", getRegister(node->arg1));
+            fprintf(file,"li  a7, 93");
             fprintf(file,"ecall\n");
         break;
         default:

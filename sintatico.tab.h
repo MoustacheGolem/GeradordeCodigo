@@ -58,21 +58,27 @@ extern int yydebug;
     CHAR = 259,                    /* CHAR  */
     INTEIRO = 260,                 /* INTEIRO  */
     ESCREVA = 261,                 /* ESCREVA  */
-    NUM = 262,                     /* NUM  */
-    ID = 263,                      /* ID  */
-    IF = 264,                      /* IF  */
-    ELSE = 265,                    /* ELSE  */
-    WHILE = 266,                   /* WHILE  */
-    FOR = 267,                     /* FOR  */
-    RETURN = 268,                  /* RETURN  */
-    EXTERN = 269,                  /* EXTERN  */
-    VOID = 270,                    /* VOID  */
-    ADD = 271,                     /* ADD  */
-    SUB = 272,                     /* SUB  */
-    DIV = 273,                     /* DIV  */
-    MUL = 274,                     /* MUL  */
-    UMINUS = 275,                  /* UMINUS  */
-    THEN = 276                     /* THEN  */
+    ENTRADA = 262,                 /* ENTRADA  */
+    NUM = 263,                     /* NUM  */
+    ID = 264,                      /* ID  */
+    IF = 265,                      /* IF  */
+    ELSE = 266,                    /* ELSE  */
+    WHILE = 267,                   /* WHILE  */
+    FOR = 268,                     /* FOR  */
+    ADD = 269,                     /* ADD  */
+    SUB = 270,                     /* SUB  */
+    DIV = 271,                     /* DIV  */
+    MUL = 272,                     /* MUL  */
+    AND = 273,                     /* AND  */
+    OR = 274,                      /* OR  */
+    LT = 275,                      /* LT  */
+    GT = 276,                      /* GT  */
+    LE = 277,                      /* LE  */
+    GE = 278,                      /* GE  */
+    EQ = 279,                      /* EQ  */
+    DIF = 280,                     /* DIF  */
+    UMINUS = 281,                  /* UMINUS  */
+    THEN = 282                     /* THEN  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -87,7 +93,7 @@ union YYSTYPE
 	char *cadeia;
 	struct astNode* node;
 
-#line 91 "sintatico.tab.h"
+#line 97 "sintatico.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
