@@ -21,6 +21,7 @@ enum AST_TYPE
     AST_JGE,
     AST_JEQ,
     AST_JNE,
+    AST_HALT,
     AST_LABEL,
     AST_NONE,
     AST_ERROR,
@@ -162,6 +163,10 @@ void writeCode(FILE* file, struct astNode* node)
         break; 
         case AST_LABEL:
             fprintf(file,"%s: \n" , node->label);
+        break;
+        case AST_HALT:
+            fprintf(file,"li  a7, 93, %s\n", getRegister(node->arg1));
+            fprintf(file,"ecall\n");
         break;
         default:
         break;
