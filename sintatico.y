@@ -2,19 +2,17 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
-	#include "sintatic_tree.h"
+	#include "codegen.h"
 
 	//#define YYDEBUG 1
 
 	extern FILE *yyin;
 	extern FILE *yyout;
 
-	// SEMANTICO
+	// Tabela de símbolos
 	struct regTabSimb {
-		char *nome; /* nome do simbolo */
-		char *tipo; /* tipo_int ou tipo_cad ou nsa */
-		char *natureza; /* variavel ou procedimento */
-		char *usado; /* sim ou nao */
+		char *nome;
+		char *tipo;
 		int locMem;
 		struct regTabSimb *prox; /* ponteiro */
 	};
@@ -26,19 +24,7 @@
 	int erroSemantico;
 
 	static int proxLocMemVar = 0;
-	// FIM SEMANTICO
-
-	// GERA CODIGO
-	int locMemId = 0; /* para recuperacao na TS */
-
-	/* TM location number for current instruction emission */
-	static int emitLoc = 0 ;
-
-	/* Highest TM location emitted so far
-	For use in conjunction with emitSkip,
-	emitBackup, and emitRestore */
-	static int highEmitLoc = 0;
-	// FIM GERA CODIGO
+	int locMemId = 0; 
 
 	static int labelIf = 0;
 	static int labelFor = 0;
@@ -94,9 +80,7 @@ programa: declaracoes '{' lista_cmds '}'
 			case(2):
 				printf("\nErro semantico: variavel ja declarada anteriormente");
 			break;
-
-			case(3):
-				printf("\nErro semantico: ");
+			default:
 			break;
 		}
 
@@ -152,22 +136,6 @@ lista_id: ID ',' lista_id
 	}
 	
 ;
-
-// TODO empilhar contexto
-// lista_func: func ';'
-// 			func lista_func ';'
-// ;
-
-// func: type ID '(' func_args ')' '{' lista_cmds '}'
-// ;
-
-// func_args: func_arg
-// 		 | func_arg ',' func_args 
-// ;
-
-// func_arg: type ID
-// ;
-
 
 lista_cmds:	cmd ';'					{$$ = $1; }
 			| stmt					{$$ = $1;}
@@ -258,10 +226,11 @@ final_for:  ')'  { $$ = createAstNode(AST_NONE, (union ARG) ZERO, (union ARG) ZE
 
 cmd_saida:	ESCREVA '(' expr ')'
 	{ 
-
 		$$ = appendNodes($3, createAstNode(AST_OUT, (union ARG) RS, (union ARG) 0, (union ARG) 0, recuperaTipo($3)));
+
 	}
 ;
+
 
 cmd_entrada:	ENTRADA '('	ID ')'
 	{ 
@@ -398,7 +367,7 @@ logop: 	GE 		{$$ = 1;}
 
 term:	NUM
 	{
-		$$ = createAstNode(AST_ADDI, (union ARG) RS, (union ARG) ZERO,(union ARG)$1, "");
+		$$ = createAstNode(AST_LI, (union ARG) RS, (union ARG) ZERO,(union ARG)$1, "");
 	}
 	|	ID
 	{
@@ -415,17 +384,18 @@ term:	NUM
 	
 term2:	NUM
 	{
-		$$ = createAstNode(AST_ADDI, (union ARG) AC, (union ARG) ZERO, (union ARG) $1, "");
+		$$ = createAstNode(AST_LI, (union ARG) AC, (union ARG) ZERO, (union ARG) $1, "");
 	}
 	|	ID
 	{
 		if (!constaTabSimb($1)) 
 		{
+
 		  erroSemantico = 1;
 		  $$ = createAstNode(AST_ERROR,(union ARG) 0, (union ARG) 0, (union ARG) 0, "");
 		} else {
 		  locMemId = recuperaLocMemId($1);
-		   $$ = appendNodes(createAstNode(AST_LD, (union ARG) AU, (union ARG)0, (union ARG)0, $1)  ,createAstNode(AST_ADD, (union ARG) AC, (union ARG) ZERO, (union ARG) AU, "")) ;
+		   $$ = createAstNode(AST_LD, (union ARG) AC, (union ARG)0, (union ARG)AU, $1) ;
 		}
 	}
 ;
@@ -442,13 +412,9 @@ regTabSimb *colocaSimb(char *nomeSimb, char *tipoSimb, char *naturezaSimb, char 
 
 	ptr->nome= (char *) malloc(strlen(nomeSimb)+1);
 	ptr->tipo= (char *) malloc(strlen(tipoSimb)+1);
-	ptr->natureza= (char *) malloc(strlen(naturezaSimb)+1);
-	ptr->usado= (char *) malloc(strlen(usadoSimb)+1);
 
 	strcpy (ptr->nome,nomeSimb);
 	strcpy (ptr->tipo,tipoSimb);
-	strcpy (ptr->natureza,naturezaSimb);
-	strcpy (ptr->usado,usadoSimb);
 	ptr->locMem= loc;
 
 	ptr->prox= (struct regTabSimb *)tabSimb;
@@ -470,11 +436,14 @@ int recuperaLocMemId(char *nomeSimb) {
 	return -1;
 }
 
-char* recuperaTipo(char *nomeSimb){
+char * recuperaTipo(char *nomeSimb){
 	regTabSimb *ptr;
 	for (ptr=tabSimb; ptr!=(regTabSimb *)0; ptr=(regTabSimb *)ptr->prox)
-	  if (strcmp(ptr->nome,nomeSimb)==0) return ptr->tipo;
-	return NULL;
+	  if (strcmp(ptr->nome,nomeSimb)==0)
+	  {
+		return ptr->tipo;
+	  } 
+	return "";
 }
 
 
@@ -488,22 +457,8 @@ char* concatNum(char *src, int num) {
 
     sprintf(result, "%s%d", src, num);
 
-    return src;
+    return result;
 }
-
-// printar estrutura da tabela de simbulos
-void imprimeTabSimb(regTabSimb *tabSimb) {
-  regTabSimb *ptr;
-	printf("TabSimb:\n");
-  for (ptr = tabSimb; ptr != NULL; ptr = ptr->prox) {
-    printf("  Nome: %s ,", ptr->nome);
-    printf("Tipo: %s ,", ptr->tipo);
-    printf("Natureza: %s ,", ptr->natureza);
-    printf("Usado: %s ,", ptr->usado);
-    printf("LocMem: %d\n", ptr->locMem);
-  }
-}
-// FIM GERA CODIGO
 
 
 void generateCode(FILE* file, astNode* node)

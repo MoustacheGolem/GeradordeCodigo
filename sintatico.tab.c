@@ -72,19 +72,17 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
-	#include "sintatic_tree.h"
+	#include "codegen.h"
 
 	//#define YYDEBUG 1
 
 	extern FILE *yyin;
 	extern FILE *yyout;
 
-	// SEMANTICO
+	// Tabela de símbolos
 	struct regTabSimb {
-		char *nome; /* nome do simbolo */
-		char *tipo; /* tipo_int ou tipo_cad ou nsa */
-		char *natureza; /* variavel ou procedimento */
-		char *usado; /* sim ou nao */
+		char *nome;
+		char *tipo;
 		int locMem;
 		struct regTabSimb *prox; /* ponteiro */
 	};
@@ -96,19 +94,7 @@
 	int erroSemantico;
 
 	static int proxLocMemVar = 0;
-	// FIM SEMANTICO
-
-	// GERA CODIGO
-	int locMemId = 0; /* para recuperacao na TS */
-
-	/* TM location number for current instruction emission */
-	static int emitLoc = 0 ;
-
-	/* Highest TM location emitted so far
-	For use in conjunction with emitSkip,
-	emitBackup, and emitRestore */
-	static int highEmitLoc = 0;
-	// FIM GERA CODIGO
+	int locMemId = 0; 
 
 	static int labelIf = 0;
 	static int labelFor = 0;
@@ -122,7 +108,7 @@
 	char* recuperaTipo(char *nomeSimb);
 
 
-#line 126 "sintatico.tab.c"
+#line 112 "sintatico.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -597,12 +583,12 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    88,    88,   120,   122,   125,   125,   128,   129,   132,
-     142,   172,   173,   174,   175,   177,   178,   179,   183,   184,
-     185,   188,   197,   215,   228,   241,   243,   246,   250,   251,
-     255,   256,   259,   266,   282,   299,   300,   329,   383,   384,
-     385,   386,   389,   390,   391,   392,   393,   394,   395,   396,
-     399,   403,   416,   420
+       0,    74,    74,   106,   108,   111,   111,   114,   115,   118,
+     128,   158,   159,   160,   161,   163,   164,   165,   169,   170,
+     171,   174,   183,   201,   214,   227,   229,   232,   236,   237,
+     241,   242,   245,   253,   269,   286,   287,   316,   370,   371,
+     372,   373,   376,   377,   378,   379,   380,   381,   382,   383,
+     386,   390,   403,   407
 };
 #endif
 
@@ -1231,7 +1217,7 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* programa: declaracoes '{' lista_cmds '}'  */
-#line 89 "sintatico.y"
+#line 75 "sintatico.y"
         {
 		switch(erroSemantico){
 			case(1):
@@ -1260,47 +1246,47 @@ yyreduce:
 
 		YYACCEPT;
 	}
-#line 1264 "sintatico.tab.c"
+#line 1250 "sintatico.tab.c"
     break;
 
   case 3: /* declaracoes: linha_decl declaracoes  */
-#line 120 "sintatico.y"
+#line 106 "sintatico.y"
                                         {(yyval.node) = appendNodes((yyvsp[-1].node), (yyvsp[0].node));}
-#line 1270 "sintatico.tab.c"
+#line 1256 "sintatico.tab.c"
     break;
 
   case 4: /* declaracoes: linha_decl  */
-#line 122 "sintatico.y"
+#line 108 "sintatico.y"
                                                         {(yyval.node) = (yyvsp[0].node);}
-#line 1276 "sintatico.tab.c"
+#line 1262 "sintatico.tab.c"
     break;
 
   case 5: /* $@1: %empty  */
-#line 125 "sintatico.y"
+#line 111 "sintatico.y"
                  {type_info = (yyvsp[0].cadeia);}
-#line 1282 "sintatico.tab.c"
+#line 1268 "sintatico.tab.c"
     break;
 
   case 6: /* linha_decl: type $@1 lista_id ';'  */
-#line 125 "sintatico.y"
+#line 111 "sintatico.y"
                                                 { (yyval.node) = (yyvsp[-1].node);}
-#line 1288 "sintatico.tab.c"
+#line 1274 "sintatico.tab.c"
     break;
 
   case 7: /* type: INT  */
-#line 128 "sintatico.y"
+#line 114 "sintatico.y"
                         {(yyval.cadeia) = "type_int"; }
-#line 1294 "sintatico.tab.c"
+#line 1280 "sintatico.tab.c"
     break;
 
   case 8: /* type: CHAR  */
-#line 129 "sintatico.y"
+#line 115 "sintatico.y"
                         {(yyval.cadeia) = "type_char";}
-#line 1300 "sintatico.tab.c"
+#line 1286 "sintatico.tab.c"
     break;
 
   case 9: /* lista_id: ID ',' lista_id  */
-#line 133 "sintatico.y"
+#line 119 "sintatico.y"
         {
 		if(constaTabSimb((yyvsp[-2].cadeia)))
 		{
@@ -1310,11 +1296,11 @@ yyreduce:
 		colocaSimb((yyvsp[-2].cadeia),type_info,"variavel","nao",proxLocMemVar++);
 		(yyval.node) = appendNodes(createAstNode(AST_DATA,(union ARG) 0, (union ARG) 0, (union ARG) 0, (yyvsp[-2].cadeia)), (yyvsp[0].node));
 	}
-#line 1314 "sintatico.tab.c"
+#line 1300 "sintatico.tab.c"
     break;
 
   case 10: /* lista_id: ID  */
-#line 143 "sintatico.y"
+#line 129 "sintatico.y"
         {	
 		
 		if(constaTabSimb((yyvsp[0].cadeia)))
@@ -1325,71 +1311,71 @@ yyreduce:
 		(yyval.node) = createAstNode(AST_DATA,(union ARG) 0, (union ARG) 0, (union ARG) 0, (yyvsp[0].cadeia));
 		
 	}
-#line 1329 "sintatico.tab.c"
+#line 1315 "sintatico.tab.c"
     break;
 
   case 11: /* lista_cmds: cmd ';'  */
-#line 172 "sintatico.y"
+#line 158 "sintatico.y"
                                                         {(yyval.node) = (yyvsp[-1].node); }
-#line 1335 "sintatico.tab.c"
+#line 1321 "sintatico.tab.c"
     break;
 
   case 12: /* lista_cmds: stmt  */
-#line 173 "sintatico.y"
+#line 159 "sintatico.y"
                                                                 {(yyval.node) = (yyvsp[0].node);}
-#line 1341 "sintatico.tab.c"
+#line 1327 "sintatico.tab.c"
     break;
 
   case 13: /* lista_cmds: cmd ';' lista_cmds  */
-#line 174 "sintatico.y"
+#line 160 "sintatico.y"
                                                 {(yyval.node) = appendNodes((yyvsp[-2].node), (yyvsp[0].node));}
-#line 1347 "sintatico.tab.c"
+#line 1333 "sintatico.tab.c"
     break;
 
   case 14: /* lista_cmds: stmt lista_cmds  */
-#line 175 "sintatico.y"
+#line 161 "sintatico.y"
                                                         {(yyval.node) = appendNodes((yyvsp[-1].node), (yyvsp[0].node));}
-#line 1353 "sintatico.tab.c"
+#line 1339 "sintatico.tab.c"
     break;
 
   case 15: /* cmd: cmd_saida  */
-#line 177 "sintatico.y"
+#line 163 "sintatico.y"
                                         {(yyval.node) = (yyvsp[0].node) ;}
-#line 1359 "sintatico.tab.c"
+#line 1345 "sintatico.tab.c"
     break;
 
   case 16: /* cmd: cmd_entrada  */
-#line 178 "sintatico.y"
+#line 164 "sintatico.y"
                                         {(yyval.node) = (yyvsp[0].node) ;}
-#line 1365 "sintatico.tab.c"
+#line 1351 "sintatico.tab.c"
     break;
 
   case 17: /* cmd: cmd_atribuicao  */
-#line 179 "sintatico.y"
+#line 165 "sintatico.y"
                                         {(yyval.node) = (yyvsp[0].node) ;}
-#line 1371 "sintatico.tab.c"
+#line 1357 "sintatico.tab.c"
     break;
 
   case 18: /* stmt: stmt_if  */
-#line 183 "sintatico.y"
+#line 169 "sintatico.y"
                                 {(yyval.node) = (yyvsp[0].node);}
-#line 1377 "sintatico.tab.c"
+#line 1363 "sintatico.tab.c"
     break;
 
   case 19: /* stmt: stmt_while  */
-#line 184 "sintatico.y"
+#line 170 "sintatico.y"
                                 {(yyval.node) = (yyvsp[0].node);}
-#line 1383 "sintatico.tab.c"
+#line 1369 "sintatico.tab.c"
     break;
 
   case 20: /* stmt: stmt_for  */
-#line 185 "sintatico.y"
+#line 171 "sintatico.y"
                                         {(yyval.node) = (yyvsp[0].node);}
-#line 1389 "sintatico.tab.c"
+#line 1375 "sintatico.tab.c"
     break;
 
   case 21: /* stmt_if: IF '(' expr ')' '{' lista_cmds '}'  */
-#line 189 "sintatico.y"
+#line 175 "sintatico.y"
         {
 		(yyval.node) = 
 		appendNodes((yyvsp[-4].node) , 
@@ -1398,11 +1384,11 @@ yyreduce:
 		labelIf++;
 		
 	}
-#line 1402 "sintatico.tab.c"
+#line 1388 "sintatico.tab.c"
     break;
 
   case 22: /* stmt_if: IF '(' expr ')' '{' lista_cmds '}' ELSE '{' lista_cmds '}'  */
-#line 198 "sintatico.y"
+#line 184 "sintatico.y"
         {
 		astNode* nodeLeft = 
 		appendNodes((yyvsp[-8].node) , 
@@ -1418,11 +1404,11 @@ yyreduce:
 		(yyval.node) = appendNodes(nodeLeft, nodeRight);
 		labelIf++;
 	}
-#line 1422 "sintatico.tab.c"
+#line 1408 "sintatico.tab.c"
     break;
 
   case 23: /* stmt_while: WHILE '(' expr ')' '{' lista_cmds '}'  */
-#line 216 "sintatico.y"
+#line 202 "sintatico.y"
         {
 		(yyval.node) = 
 		appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("WHILE", labelWhile), ""),
@@ -1433,11 +1419,11 @@ yyreduce:
 							createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("WHILEB", labelWhile), ""))))));
 		labelWhile++;
 	}
-#line 1437 "sintatico.tab.c"
+#line 1423 "sintatico.tab.c"
     break;
 
   case 24: /* stmt_for: FOR '(' for_atr for_expr final_for '{' lista_cmds '}'  */
-#line 229 "sintatico.y"
+#line 215 "sintatico.y"
         {
 		(yyval.node) = appendNodes((yyvsp[-5].node), 
 				appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("FOR", labelFor)),
@@ -1448,62 +1434,62 @@ yyreduce:
 									appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("FOR", labelFor), ""), 
 										createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("ENDFOR", labelFor)))))))));
 	}
-#line 1452 "sintatico.tab.c"
+#line 1438 "sintatico.tab.c"
     break;
 
   case 25: /* for_atr: ';'  */
-#line 242 "sintatico.y"
+#line 228 "sintatico.y"
         { (yyval.node) = createAstNode(AST_NONE, (union ARG) ZERO, (union ARG) ZERO, (union ARG) "", ""); }
-#line 1458 "sintatico.tab.c"
+#line 1444 "sintatico.tab.c"
     break;
 
   case 26: /* for_atr: term ';'  */
-#line 245 "sintatico.y"
+#line 231 "sintatico.y"
         { (yyval.node) = (yyvsp[-1].node); }
-#line 1464 "sintatico.tab.c"
+#line 1450 "sintatico.tab.c"
     break;
 
   case 27: /* for_atr: cmd_atribuicao ';'  */
-#line 247 "sintatico.y"
+#line 233 "sintatico.y"
         { (yyval.node) = (yyvsp[-1].node); }
-#line 1470 "sintatico.tab.c"
+#line 1456 "sintatico.tab.c"
     break;
 
   case 28: /* for_expr: ';'  */
-#line 250 "sintatico.y"
+#line 236 "sintatico.y"
                                 { (yyval.node) = createAstNode(AST_NONE, (union ARG) ZERO, (union ARG) ZERO, (union ARG) "", ""); }
-#line 1476 "sintatico.tab.c"
+#line 1462 "sintatico.tab.c"
     break;
 
   case 29: /* for_expr: expr ';'  */
-#line 251 "sintatico.y"
+#line 237 "sintatico.y"
                                         { (yyval.node) = (yyvsp[-1].node) ;}
-#line 1482 "sintatico.tab.c"
+#line 1468 "sintatico.tab.c"
     break;
 
   case 30: /* final_for: ')'  */
-#line 255 "sintatico.y"
+#line 241 "sintatico.y"
                  { (yyval.node) = createAstNode(AST_NONE, (union ARG) ZERO, (union ARG) ZERO, (union ARG) "", "") ;}
-#line 1488 "sintatico.tab.c"
+#line 1474 "sintatico.tab.c"
     break;
 
   case 31: /* final_for: cmd_atribuicao ')'  */
-#line 256 "sintatico.y"
+#line 242 "sintatico.y"
                                               { (yyval.node) = (yyvsp[-1].node) ;}
-#line 1494 "sintatico.tab.c"
+#line 1480 "sintatico.tab.c"
     break;
 
   case 32: /* cmd_saida: ESCREVA '(' expr ')'  */
-#line 260 "sintatico.y"
+#line 246 "sintatico.y"
         { 
-
 		(yyval.node) = appendNodes((yyvsp[-1].node), createAstNode(AST_OUT, (union ARG) RS, (union ARG) 0, (union ARG) 0, recuperaTipo((yyvsp[-1].node))));
+
 	}
-#line 1503 "sintatico.tab.c"
+#line 1489 "sintatico.tab.c"
     break;
 
   case 33: /* cmd_entrada: ENTRADA '(' ID ')'  */
-#line 267 "sintatico.y"
+#line 254 "sintatico.y"
         { 
 		
 		if (!constaTabSimb((yyvsp[-1].cadeia))) 
@@ -1517,11 +1503,11 @@ yyreduce:
 					createAstNode(AST_LD, (union ARG) RS, (union ARG) 0, (union ARG) AC, (yyvsp[-1].cadeia)));
 		}
 	}
-#line 1521 "sintatico.tab.c"
+#line 1507 "sintatico.tab.c"
     break;
 
   case 34: /* cmd_atribuicao: ID '=' expr  */
-#line 283 "sintatico.y"
+#line 270 "sintatico.y"
         {	
 		
 		if (!constaTabSimb((yyvsp[-2].cadeia))) 
@@ -1535,17 +1521,17 @@ yyreduce:
 		}
 		
 	}
-#line 1539 "sintatico.tab.c"
+#line 1525 "sintatico.tab.c"
     break;
 
   case 35: /* expr: term  */
-#line 299 "sintatico.y"
+#line 286 "sintatico.y"
                         { (yyval.node) = (yyvsp[0].node); }
-#line 1545 "sintatico.tab.c"
+#line 1531 "sintatico.tab.c"
     break;
 
   case 36: /* expr: expr binop term2  */
-#line 301 "sintatico.y"
+#line 288 "sintatico.y"
         {
         switch((yyvsp[-1].inteiro)){
 			case 1:
@@ -1573,11 +1559,11 @@ yyreduce:
 			break;
 		}
 	}
-#line 1577 "sintatico.tab.c"
+#line 1563 "sintatico.tab.c"
     break;
 
   case 37: /* expr: expr logop term2  */
-#line 330 "sintatico.y"
+#line 317 "sintatico.y"
         {
         switch((yyvsp[-1].inteiro)){
 			case 1:
@@ -1629,91 +1615,91 @@ yyreduce:
 			break;
 		}
 	}
-#line 1633 "sintatico.tab.c"
+#line 1619 "sintatico.tab.c"
     break;
 
   case 38: /* binop: ADD  */
-#line 383 "sintatico.y"
+#line 370 "sintatico.y"
                 {(yyval.inteiro) = 1;}
-#line 1639 "sintatico.tab.c"
+#line 1625 "sintatico.tab.c"
     break;
 
   case 39: /* binop: SUB  */
-#line 384 "sintatico.y"
+#line 371 "sintatico.y"
                         {(yyval.inteiro) = 2;}
-#line 1645 "sintatico.tab.c"
+#line 1631 "sintatico.tab.c"
     break;
 
   case 40: /* binop: MUL  */
-#line 385 "sintatico.y"
+#line 372 "sintatico.y"
                         {(yyval.inteiro) = 3;}
-#line 1651 "sintatico.tab.c"
+#line 1637 "sintatico.tab.c"
     break;
 
   case 41: /* binop: DIV  */
-#line 386 "sintatico.y"
+#line 373 "sintatico.y"
                         {(yyval.inteiro) = 4;}
-#line 1657 "sintatico.tab.c"
+#line 1643 "sintatico.tab.c"
     break;
 
   case 42: /* logop: GE  */
-#line 389 "sintatico.y"
+#line 376 "sintatico.y"
                         {(yyval.inteiro) = 1;}
-#line 1663 "sintatico.tab.c"
+#line 1649 "sintatico.tab.c"
     break;
 
   case 43: /* logop: LE  */
-#line 390 "sintatico.y"
+#line 377 "sintatico.y"
                         {(yyval.inteiro) = 2;}
-#line 1669 "sintatico.tab.c"
+#line 1655 "sintatico.tab.c"
     break;
 
   case 44: /* logop: GT  */
-#line 391 "sintatico.y"
+#line 378 "sintatico.y"
                         {(yyval.inteiro) = 3;}
-#line 1675 "sintatico.tab.c"
+#line 1661 "sintatico.tab.c"
     break;
 
   case 45: /* logop: LT  */
-#line 392 "sintatico.y"
+#line 379 "sintatico.y"
                         {(yyval.inteiro) = 4;}
-#line 1681 "sintatico.tab.c"
+#line 1667 "sintatico.tab.c"
     break;
 
   case 46: /* logop: EQ  */
-#line 393 "sintatico.y"
+#line 380 "sintatico.y"
                         {(yyval.inteiro) = 5;}
-#line 1687 "sintatico.tab.c"
+#line 1673 "sintatico.tab.c"
     break;
 
   case 47: /* logop: DIF  */
-#line 394 "sintatico.y"
+#line 381 "sintatico.y"
                         {(yyval.inteiro) = 6;}
-#line 1693 "sintatico.tab.c"
+#line 1679 "sintatico.tab.c"
     break;
 
   case 48: /* logop: AND  */
-#line 395 "sintatico.y"
+#line 382 "sintatico.y"
                         {(yyval.inteiro) = 7;}
-#line 1699 "sintatico.tab.c"
+#line 1685 "sintatico.tab.c"
     break;
 
   case 49: /* logop: OR  */
-#line 396 "sintatico.y"
+#line 383 "sintatico.y"
                         {(yyval.inteiro) = 8;}
-#line 1705 "sintatico.tab.c"
+#line 1691 "sintatico.tab.c"
     break;
 
   case 50: /* term: NUM  */
-#line 400 "sintatico.y"
+#line 387 "sintatico.y"
         {
-		(yyval.node) = createAstNode(AST_ADDI, (union ARG) RS, (union ARG) ZERO,(union ARG)(yyvsp[0].inteiro), "");
+		(yyval.node) = createAstNode(AST_LI, (union ARG) RS, (union ARG) ZERO,(union ARG)(yyvsp[0].inteiro), "");
 	}
-#line 1713 "sintatico.tab.c"
+#line 1699 "sintatico.tab.c"
     break;
 
   case 51: /* term: ID  */
-#line 404 "sintatico.y"
+#line 391 "sintatico.y"
         {
 		if (!constaTabSimb((yyvsp[0].cadeia))) 
 		{
@@ -1724,34 +1710,35 @@ yyreduce:
 		  (yyval.node) = createAstNode(AST_LD, (union ARG) RS, (union ARG)0, (union ARG) AC, (yyvsp[0].cadeia));
 		}
 	}
-#line 1728 "sintatico.tab.c"
+#line 1714 "sintatico.tab.c"
     break;
 
   case 52: /* term2: NUM  */
-#line 417 "sintatico.y"
+#line 404 "sintatico.y"
         {
-		(yyval.node) = createAstNode(AST_ADDI, (union ARG) AC, (union ARG) ZERO, (union ARG) (yyvsp[0].inteiro), "");
+		(yyval.node) = createAstNode(AST_LI, (union ARG) AC, (union ARG) ZERO, (union ARG) (yyvsp[0].inteiro), "");
 	}
-#line 1736 "sintatico.tab.c"
+#line 1722 "sintatico.tab.c"
     break;
 
   case 53: /* term2: ID  */
-#line 421 "sintatico.y"
+#line 408 "sintatico.y"
         {
 		if (!constaTabSimb((yyvsp[0].cadeia))) 
 		{
+
 		  erroSemantico = 1;
 		  (yyval.node) = createAstNode(AST_ERROR,(union ARG) 0, (union ARG) 0, (union ARG) 0, "");
 		} else {
 		  locMemId = recuperaLocMemId((yyvsp[0].cadeia));
-		   (yyval.node) = appendNodes(createAstNode(AST_LD, (union ARG) AU, (union ARG)0, (union ARG)0, (yyvsp[0].cadeia))  ,createAstNode(AST_ADD, (union ARG) AC, (union ARG) ZERO, (union ARG) AU, "")) ;
+		   (yyval.node) = createAstNode(AST_LD, (union ARG) AC, (union ARG)0, (union ARG)AU, (yyvsp[0].cadeia)) ;
 		}
 	}
-#line 1751 "sintatico.tab.c"
+#line 1738 "sintatico.tab.c"
     break;
 
 
-#line 1755 "sintatico.tab.c"
+#line 1742 "sintatico.tab.c"
 
       default: break;
     }
@@ -1944,7 +1931,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 433 "sintatico.y"
+#line 421 "sintatico.y"
 
 
 
@@ -1957,13 +1944,9 @@ regTabSimb *colocaSimb(char *nomeSimb, char *tipoSimb, char *naturezaSimb, char 
 
 	ptr->nome= (char *) malloc(strlen(nomeSimb)+1);
 	ptr->tipo= (char *) malloc(strlen(tipoSimb)+1);
-	ptr->natureza= (char *) malloc(strlen(naturezaSimb)+1);
-	ptr->usado= (char *) malloc(strlen(usadoSimb)+1);
 
 	strcpy (ptr->nome,nomeSimb);
 	strcpy (ptr->tipo,tipoSimb);
-	strcpy (ptr->natureza,naturezaSimb);
-	strcpy (ptr->usado,usadoSimb);
 	ptr->locMem= loc;
 
 	ptr->prox= (struct regTabSimb *)tabSimb;
@@ -1985,11 +1968,15 @@ int recuperaLocMemId(char *nomeSimb) {
 	return -1;
 }
 
-char* recuperaTipo(char *nomeSimb){
+char * recuperaTipo(char *nomeSimb){
 	regTabSimb *ptr;
 	for (ptr=tabSimb; ptr!=(regTabSimb *)0; ptr=(regTabSimb *)ptr->prox)
-	  if (strcmp(ptr->nome,nomeSimb)==0) return ptr->tipo;
-	return NULL;
+	  if (strcmp(ptr->nome,nomeSimb)==0)
+	  {
+		printf("  Nome: %s ,", ptr->nome);
+    	printf("Tipo: %s ,", ptr->tipo);
+	  } 
+	return "";
 }
 
 
@@ -2003,21 +1990,19 @@ char* concatNum(char *src, int num) {
 
     sprintf(result, "%s%d", src, num);
 
-    return src;
+    return result;
 }
 
 // printar estrutura da tabela de simbulos
-void imprimeTabSimb(regTabSimb *tabSimb) {
-  regTabSimb *ptr;
-	printf("TabSimb:\n");
-  for (ptr = tabSimb; ptr != NULL; ptr = ptr->prox) {
-    printf("  Nome: %s ,", ptr->nome);
-    printf("Tipo: %s ,", ptr->tipo);
-    printf("Natureza: %s ,", ptr->natureza);
-    printf("Usado: %s ,", ptr->usado);
-    printf("LocMem: %d\n", ptr->locMem);
-  }
-}
+// void imprimeTabSimb(regTabSimb *tabSimb) {
+//   regTabSimb *ptr;
+// 	printf("TabSimb:\n");
+//   for (ptr = tabSimb; ptr != NULL; ptr = ptr->prox) {
+//     printf("  Nome: %s ,", ptr->nome);
+//     printf("Tipo: %s ,", ptr->tipo);
+//     printf("LocMem: %d\n", ptr->locMem);
+//   }
+// }
 // FIM GERA CODIGO
 
 

@@ -55,6 +55,17 @@ int a;
 
 // fatorial
 
+int fatorial, i;
+{
+    /*asdasdaasdasas*/
+    fatorial = 1;
+    for(i = 12; i > 0; i = i-1)
+    {
+        fatorial = fatorial * i;
+    }
+    escreva(fatorial);
+}
+
 
 
 
