@@ -117,10 +117,10 @@ void writeCode(FILE* file, struct astNode* node)
         break;
         case AST_HALT:
             fprintf(file,"li a7, 11 \n");
-            fprintf(file,"li a0, '\n'\n");
+            fprintf(file,"li a0, \'\\n\' \n");
             fprintf(file,"ecall\n");
     
-            fprintf(file,"li a7, 10\n");
+            fprintf(file,"li a7, 10 \n");
             fprintf(file,"ecall\n");
         break;
         default:

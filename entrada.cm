@@ -1,10 +1,5 @@
-int fatorial, i;
+int a;
 {
-    /*asdasdaasdasas*/
-    fatorial = 1;
-    for(i = 12; i > 0; i = i-1)
-    {
-        fatorial = fatorial * i;
-    }
-    escreva(fatorial);
+    entrada(a);
+    escreva(a);
 }
