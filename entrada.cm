@@ -1,7 +1,10 @@
-int i;
+int fatorial, i;
 {
-    for( i = 0; i < 8; i = i + 1)
+    fatorial = 1;
+    for(i = 9; i > 0; i = i+1)
     {
-        escreva(i);
+        fatorial = fatorial * i;
+        escreva(fatorial);
     }
+    escreva(fatorial);
 }

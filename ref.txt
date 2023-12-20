@@ -47,7 +47,6 @@ int i;
 }
 
 //ler
-//TODO entrada não está funcionando
 int a;
 {
     entrada(a);

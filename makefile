@@ -7,3 +7,4 @@ all:
 
 run:
 	./gera
+	./fpgrars-x86_64-unknown-linux-gnu--unb saida.s

@@ -91,13 +91,13 @@ char* getRegister(union ARG arg)
     switch (arg.regs)
     {
         case RS:
-            return "rd";
+            return "s1";
         break;
         case AC:
-            return "rs1";
+            return "s2";
         break;
         case AU:
-            return "rs2";
+            return "s3";
         break;
         case ZERO:
             return "zero";
@@ -162,17 +162,14 @@ void writeCode(FILE* file, struct astNode* node)
             fprintf(file,"sne  %s,%s, %s \n",getRegister(node->arg1),getRegister(node->arg2),getRegister(node->arg3));
         break;
         case AST_IN:
-            fprintf(file,"la a0, 0\n");
-            fprintf(file,"li a1, bugger\n");
-            fprintf(file,"li a2, 4 \n");
-            fprintf(file,"li a7, 63\n");
+            fprintf(file,"li a7, 5\n");
             fprintf(file,"ecall\n");
+            fprintf(file,"mv s1, a0\n");
         break;
         case AST_OUT:
-            fprintf(file,"la  a1, %s\n", getRegister(node->arg1));
-            fprintf(file,"li a2, 4\n");
-            fprintf(file,"li a0, 1 \n");
-            fprintf(file,"li a7, 64\n");
+            // printf("%s \n",node->label);
+            fprintf(file,"mv a0, %s \n", getRegister(node->arg1));
+            fprintf(file,"li a7, 1\n");
             fprintf(file,"ecall\n");
         break;
         case AST_LD:
@@ -205,7 +202,7 @@ void writeCode(FILE* file, struct astNode* node)
             fprintf(file,"%s: \n" , node->label);
         break;
         case AST_HALT:
-            fprintf(file,"li  a7, 93");
+            fprintf(file,"li a7, 10\n");
             fprintf(file,"ecall\n");
         break;
         default:

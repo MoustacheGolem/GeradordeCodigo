@@ -2,7 +2,6 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
-	#include "code.h"
 	#include "sintatic_tree.h"
 
 	//#define YYDEBUG 1
@@ -23,6 +22,7 @@
 	typedef struct regTabSimb regTabSimb;
 	regTabSimb *tabSimb = (regTabSimb *)0;
 	regTabSimb *colocaSimb();
+	
 	int erroSemantico;
 
 	static int proxLocMemVar = 0;
@@ -49,6 +49,7 @@
 	static struct astNode* astRoot;
 
 	char* concatNum(char *src, int num);
+	char* recuperaTipo(char *nomeSimb);
 
 %}
 
@@ -86,15 +87,10 @@
 
 programa: declaracoes '{' lista_cmds '}'
 	{
-		printf("\nok programa\n");
 		switch(erroSemantico){
-			case(0):
-				printf("\nO programa não possui erros semânticos");
-			break;
 			case(1):
 				printf("\nErro semantico: Variavel não declarada");
 			break;
-
 			case(2):
 				printf("\nErro semantico: variavel ja declarada anteriormente");
 			break;
@@ -104,13 +100,11 @@ programa: declaracoes '{' lista_cmds '}'
 			break;
 		}
 
-		buffer:
-
 		if(erroSemantico == 0)
 		{
-			astNode* dec = appendNodes(createAstNode(AST_SECTION,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".section .data"), 
+			astNode* dec = appendNodes(createAstNode(AST_SECTION,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".data"), 
 								appendNodes(createAstNode(AST_DATA,(union ARG) 0, (union ARG) 0, (union ARG) 0, "buffer"),$1));
-			astNode* cmds = appendNodes(createAstNode(AST_SECTION,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".section .text"), $3);
+			astNode* cmds = appendNodes(createAstNode(AST_SECTION,(union ARG) 0, (union ARG) 0, (union ARG) 0, ".text"), $3);
 			astRoot = appendNodes(dec,appendNodes(cmds,createAstNode(AST_HALT,(union ARG) 0, (union ARG) 0, (union ARG) 0, "")));
 		}
 		else
@@ -195,8 +189,8 @@ stmt_if:  	IF '(' expr ')' '{' lista_cmds'}'   %prec THEN
 	{
 		$$ = 
 		appendNodes($3 , 
-			appendNodes(createAstNode(AST_JEQ, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("IFEND#", labelIf), ""), 
-				appendNodes($6, createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,concatNum("ENDIF#", labelIf)))));
+			appendNodes(createAstNode(AST_JEQ, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("IFEND", labelIf), ""), 
+				appendNodes($6, createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,concatNum("ENDIF", labelIf)))));
 		labelIf++;
 		
 	}
@@ -204,13 +198,13 @@ stmt_if:  	IF '(' expr ')' '{' lista_cmds'}'   %prec THEN
 	{
 		astNode* nodeLeft = 
 		appendNodes($3 , 
-			appendNodes(createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("ELSE#",labelIf), ""), 
+			appendNodes(createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("ELSE",labelIf), ""), 
 					appendNodes($6,
-						 createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("ENDIF#", labelIf), ""))));
+						 createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("ENDIF", labelIf), ""))));
 
 		astNode* nodeRight = 
-		appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0, concatNum("ELSE#",labelIf)),
-			appendNodes($10, createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0, concatNum("ENDIF#",labelIf))));
+		appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0, concatNum("ELSE",labelIf)),
+			appendNodes($10, createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0, concatNum("ENDIF",labelIf))));
 
 		
 		$$ = appendNodes(nodeLeft, nodeRight);
@@ -221,12 +215,12 @@ stmt_if:  	IF '(' expr ')' '{' lista_cmds'}'   %prec THEN
 stmt_while: WHILE '(' expr ')' '{' lista_cmds'}'  
 	{
 		$$ = 
-		appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("WHILE#", labelWhile), ""),
-			appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("WHILEB#", labelWhile)) ,
+		appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("WHILE", labelWhile), ""),
+			appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("WHILEB", labelWhile)) ,
 				appendNodes($6,
 					appendNodes($3, 
-						appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("WHILE#", labelWhile)), 
-							createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("WHILEB#", labelWhile), ""))))));
+						appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("WHILE", labelWhile)), 
+							createAstNode(AST_JGT, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("WHILEB", labelWhile), ""))))));
 		labelWhile++;
 	}
 ;
@@ -234,13 +228,13 @@ stmt_while: WHILE '(' expr ')' '{' lista_cmds'}'
 stmt_for: FOR '(' for_atr  for_expr  final_for  '{' lista_cmds'}'  
 	{
 		$$ = appendNodes($3, 
-				appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("FOR#", labelFor)),
+				appendNodes(createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("FOR", labelFor)),
 					appendNodes($4,
-						appendNodes(createAstNode(AST_JLE, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("ENDFOR#", labelFor), ""),
+						appendNodes(createAstNode(AST_JLE, (union ARG) RS, (union ARG) ZERO, (union ARG) concatNum("ENDFOR", labelFor), ""),
 							appendNodes($7,
 								appendNodes($5,
-									appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("FOR#", labelFor), ""), 
-										createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("ENDFOR#", labelFor)))))))));
+									appendNodes(createAstNode(AST_JEQ, (union ARG) ZERO, (union ARG) ZERO, (union ARG) concatNum("FOR", labelFor), ""), 
+										createAstNode(AST_LABEL, (union ARG) 0, (union ARG) 0, (union ARG) 0,  concatNum("ENDFOR", labelFor)))))))));
 	}
 ;
 
@@ -264,7 +258,8 @@ final_for:  ')'  { $$ = createAstNode(AST_NONE, (union ARG) ZERO, (union ARG) ZE
 
 cmd_saida:	ESCREVA '(' expr ')'
 	{ 
-		$$ = appendNodes($3, createAstNode(AST_OUT, (union ARG) RS, (union ARG) 0, (union ARG) 0, ""));
+
+		$$ = appendNodes($3, createAstNode(AST_OUT, (union ARG) RS, (union ARG) 0, (union ARG) 0, recuperaTipo($3)));
 	}
 ;
 
@@ -430,7 +425,7 @@ term2:	NUM
 		  $$ = createAstNode(AST_ERROR,(union ARG) 0, (union ARG) 0, (union ARG) 0, "");
 		} else {
 		  locMemId = recuperaLocMemId($1);
-		   $$ = appendNodes(createAstNode(AST_LD, (union ARG) AU, (union ARG)0, (union ARG)0, "")  ,createAstNode(AST_ADD, (union ARG) AC, (union ARG) ZERO, (union ARG) AU, "")) ;
+		   $$ = appendNodes(createAstNode(AST_LD, (union ARG) AU, (union ARG)0, (union ARG)0, $1)  ,createAstNode(AST_ADD, (union ARG) AC, (union ARG) ZERO, (union ARG) AU, "")) ;
 		}
 	}
 ;
@@ -440,7 +435,6 @@ term2:	NUM
 
 // ------------------------------------------------ SEMANTICO ------------------------------------------------
 
-// TODO se for fazer função fazer removeSimb = código para remvoer node de lista de encadeada
 
 regTabSimb *colocaSimb(char *nomeSimb, char *tipoSimb, char *naturezaSimb, char *usadoSimb,int loc){
 	regTabSimb *ptr;
@@ -476,6 +470,14 @@ int recuperaLocMemId(char *nomeSimb) {
 	return -1;
 }
 
+char* recuperaTipo(char *nomeSimb){
+	regTabSimb *ptr;
+	for (ptr=tabSimb; ptr!=(regTabSimb *)0; ptr=(regTabSimb *)ptr->prox)
+	  if (strcmp(ptr->nome,nomeSimb)==0) return ptr->tipo;
+	return NULL;
+}
+
+
 char* concatNum(char *src, int num) {
 	int length = strlen(src) + snprintf(NULL, 0, "%d", num) + 1;
  	char *result = malloc(length);
@@ -486,7 +488,7 @@ char* concatNum(char *src, int num) {
 
     sprintf(result, "%s%d", src, num);
 
-    return result;
+    return src;
 }
 
 // printar estrutura da tabela de simbulos
@@ -525,7 +527,7 @@ void generateCode(FILE* file, astNode* node)
 
 int main(argc, argv) int argc; char **argv;
 	{
-	yydebug=1;
+	// yydebug=1;
 
 	erroSemantico=0;
 
@@ -534,9 +536,6 @@ int main(argc, argv) int argc; char **argv;
 
 	yyparse ();
 	generateCode(yyout, astRoot);
-	imprimeTabSimb(tabSimb);
-	//emitComment("End of execution.");
-	// emitRO("HALT",0,0,0,"");
 
 	fclose(yyin);
 	fclose(yyout);
